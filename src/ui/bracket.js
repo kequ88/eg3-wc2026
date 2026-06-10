@@ -10,7 +10,7 @@ import {
   computeSFParticipants, computeFinalParticipants,
 } from '../data/bracket.js';
 import { findTeam }  from '../data/teams.js';
-import { autoSave }  from '../services/firestore.js';
+import { autoSave, submitPick } from '../services/firestore.js';
 import { Analytics } from '../services/analytics.js';
 
 let bracketPicks   = { r16: {}, qf: {}, sf: {}, final: {} };
@@ -222,20 +222,22 @@ const autoSaveBracket = () => {
 export const bracketSubmit = async () => {
   if (!bracketPicks.final?.['m104']) return;
 
-  const msg = document.getElementById('bracket-msg');
-  if (msg) { msg.textContent = 'Locking in your predictions…'; msg.style.color = 'var(--muted)'; }
+  const msgEl = document.getElementById('bracket-msg');
+  const setMsg = (t, c) => { if (msgEl) { msgEl.textContent = t; msgEl.style.color = c; } };
 
-  const result = await autoSave(currentHouseId, {
+  setMsg('Locking in your predictions…', 'var(--muted)');
+
+  // Use submitPick for the final write — enforces one-per-house rule
+  const result = await submitPick(currentHouseId, {
     bracketPicks,
     progress: 'done',
-    submittedAt: Date.now(),
   });
 
   if (result.ok) {
     Analytics.pickSubmitted(currentHouseId, bracketPicks.final['m104']);
-    return true; // signal to parent to show success screen
+    return true;
   } else {
-    if (msg) { msg.textContent = 'Save failed — please try again.'; msg.style.color = 'var(--red)'; }
+    setMsg(result.msg || 'Save failed — please try again.', 'var(--red)');
     return false;
   }
 };

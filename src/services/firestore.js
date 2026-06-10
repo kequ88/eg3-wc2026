@@ -1,40 +1,26 @@
-// src/services/firestore.js — REWRITTEN for bracket schema
+// src/services/firestore.js
 //
-// All Firestore operations in one place.
-// Schema: /picks/{houseId} — one document per house.
-//
-// DOCUMENT SHAPE:
-// {
-//   houseId, name, avatar, ts,
-//   progress: 'groups'|'r32'|'bracket'|'done',
-//   groupStandings: { A:{first,second}, ..., L:{first,second} },
-//   r32picks: { m73:'TeamName', m75:'TeamName', ... },   // 8 keys
-//   bracketPicks: {
-//     r16:   { m89:'Team', m90:'Team', ... },
-//     qf:    { m97:'Team', ... },
-//     sf:    { m101:'Team', m102:'Team' },
-//     final: { m104:'Team' }
-//   }
-// }
+// Lean Firestore service — minimises round trips.
+// Key change: autoSave uses setDoc with merge:true instead of
+// getDoc + conditional setDoc/updateDoc. That's ONE trip not TWO.
 
 import {
   collection, doc,
   getDoc, getDocs,
-  setDoc, updateDoc,
+  setDoc,
 } from 'firebase/firestore';
 import { db } from '../config/firebase.js';
 
 const COL = 'picks';
 
-// ── WARMUP ───────────────────────────────────────────────────
-// Called on app load to pre-establish the Firestore WebSocket connection.
-// This eliminates the 5-10 second cold start on the first real write.
-// It's a lightweight no-op read that just opens the connection.
+// ── WARMUP ────────────────────────────────────────────────────
+// Establish the Firestore connection on app load.
+// Uses a single lightweight getDoc on a non-existent doc —
+// much cheaper than getDocs (which loads the whole collection).
 export const warmupFirestore = () => {
-  // Fire and forget — we don't care about the result
-  getDocs(collection(db, COL))
+  getDoc(doc(db, COL, '_warmup'))
     .then(() => console.log('[Firestore] Connection warmed up'))
-    .catch(() => {}); // silently ignore errors
+    .catch(() => {}); // doc won't exist, that's fine — connection is open
 };
 
 // ── READ ──────────────────────────────────────────────────────
@@ -42,7 +28,10 @@ export const warmupFirestore = () => {
 export const loadAllPicks = async () => {
   try {
     const snap = await getDocs(collection(db, COL));
-    return snap.docs.map(d => d.data());
+    // Filter out the warmup doc if it somehow got created
+    return snap.docs
+      .filter(d => d.id !== '_warmup')
+      .map(d => d.data());
   } catch (err) {
     console.error('[Firestore] loadAllPicks:', err);
     return [];
@@ -59,35 +48,17 @@ export const loadPick = async (houseId) => {
   }
 };
 
-// ── CREATE (first submission) ─────────────────────────────────
-// First-write-wins: rejects if house already submitted.
-export const createPick = async (houseId, data) => {
-  try {
-    const ref      = doc(db, COL, houseId);
-    const existing = await getDoc(ref);
-    if (existing.exists()) {
-      return { ok: false, msg: `🏠 ${houseId} already submitted!` };
-    }
-    await setDoc(ref, data);
-    return { ok: true };
-  } catch (err) {
-    console.error('[Firestore] createPick:', err);
-    return { ok: false, msg: 'Failed to save. Please try again.' };
-  }
-};
-
-// ── AUTO-SAVE (partial progress) ─────────────────────────────
-// Called after each step completes. Merges fields — never overwrites.
-// Creates the document on first save (with progress:'groups').
+// ── AUTO-SAVE ─────────────────────────────────────────────────
+// Uses setDoc with merge:true — ONE network trip, not two.
+// merge:true means: if doc exists, merge fields; if not, create it.
+// This replaces the old getDoc → conditional setDoc/updateDoc pattern.
 export const autoSave = async (houseId, fields) => {
   try {
-    const ref = doc(db, COL, houseId);
-    const existing = await getDoc(ref);
-    if (existing.exists()) {
-      await updateDoc(ref, fields);
-    } else {
-      await setDoc(ref, { houseId, ...fields, ts: Date.now() });
-    }
+    await setDoc(
+      doc(db, COL, houseId),
+      { houseId, ...fields, lastUpdated: Date.now() },
+      { merge: true }  // ← the key — merges into existing doc
+    );
     return { ok: true };
   } catch (err) {
     console.error('[Firestore] autoSave:', err);
@@ -95,24 +66,43 @@ export const autoSave = async (houseId, fields) => {
   }
 };
 
-// ── UPDATE (avatar / re-submission) ──────────────────────────
+// ── FIRST SUBMISSION CHECK ────────────────────────────────────
+// Only used at final submit to enforce one-per-house rule.
+// We accept the two-trip cost here because it only happens once.
+export const submitPick = async (houseId, fields) => {
+  try {
+    const ref      = doc(db, COL, houseId);
+    const existing = await getDoc(ref);
+    if (existing.exists() && existing.data().progress === 'done') {
+      return { ok: false, msg: `🏠 ${houseId} has already submitted!` };
+    }
+    await setDoc(ref, { houseId, ...fields, submittedAt: Date.now() }, { merge: true });
+    return { ok: true };
+  } catch (err) {
+    console.error('[Firestore] submitPick:', err);
+    return { ok: false, msg: 'Failed to save. Please try again.' };
+  }
+};
+
+// ── LOAD DRAFT ────────────────────────────────────────────────
+export const loadDraft = async (houseId) => {
+  const pick = await loadPick(houseId);
+  if (!pick) return null;
+  if (pick.progress === 'done') return null;
+  return pick;
+};
+
+// ── UPDATE AVATAR ─────────────────────────────────────────────
 export const updateAvatar = async (houseId, base64) => {
   try {
-    await updateDoc(doc(db, COL, houseId), { avatar: base64 });
+    await setDoc(
+      doc(db, COL, houseId),
+      { avatar: base64 },
+      { merge: true }
+    );
     return { ok: true };
   } catch (err) {
     console.error('[Firestore] updateAvatar:', err);
     return { ok: false };
   }
-};
-
-// ── LOAD DRAFT (resume in-progress submission) ───────────────
-// Returns existing draft document or null.
-// Used on page load to resume where user left off.
-export const loadDraft = async (houseId) => {
-  const pick = await loadPick(houseId);
-  if (!pick) return null;
-  // Only return draft if not yet fully submitted
-  if (pick.progress === 'done') return null;
-  return pick;
 };
