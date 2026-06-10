@@ -69,8 +69,8 @@ const buildAllRounds = () => {
     ${buildRound('Round of 16',    R16_MATCHES, r16p, 'r16')}
     ${buildRound('Quarter-finals', QF_MATCHES,  qfp,  'qf')}
     ${buildRound('Semi-finals',    SF_MATCHES,  sfp,  'sf')}
-    ${buildFinalRound(finp)}
     ${buildThirdPlaceRound()}
+    ${buildFinalRound(finp)}
     ${buildWinnerDisplay()}
   `;
 };
@@ -264,6 +264,8 @@ export const bracketSubmit = async () => {
   if (result.ok) {
     Analytics.pickSubmitted(currentHouseId, bracketPicks.final['m104']);
     localStorage.setItem('eg3_my_house', currentHouseId);
+    // Reveal the My Bracket tab now that user has submitted
+    if (typeof App !== 'undefined') App.revealMyBracketTab();
     return true;
   } else {
     setMsg(result.msg || 'Save failed — please try again.', 'var(--red)');

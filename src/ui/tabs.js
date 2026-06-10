@@ -73,8 +73,10 @@ export const renderTabs = () => {
     <button class="tab active" data-tab="pick"    onclick="App.switchTab('pick')">✏️ Picks</button>
     <button class="tab"        data-tab="board"   onclick="App.switchTab('board')">🏅 Leaderboard</button>
     <button class="tab"        data-tab="teams"   onclick="App.switchTab('teams')">🌍 Teams</button>
-    <button class="tab"        data-tab="rules"   onclick="App.switchTab('rules')">📋 Rules</button>
-    <button class="tab"        data-tab="profile" onclick="App.switchTab('profile')"
+    <button class="tab"        data-tab="rules"      onclick="App.switchTab('rules')">📋 Rules</button>
+    <button class="tab"        data-tab="mybracket"  onclick="App.switchTab('mybracket')"
+      id="mybracket-tab" style="display:none">🌳 My Bracket</button>
+    <button class="tab"        data-tab="profile"    onclick="App.switchTab('profile')"
       id="profile-tab" style="display:none">👤 Profile</button>
   `;
 };
@@ -87,5 +89,6 @@ export const renderSections = () => {
     <div id="tab-teams"   class="section"></div>
     <div id="tab-rules"   class="section"></div>
     <div id="tab-profile" class="section"></div>
+    <div id="tab-mybracket" class="section"></div>
   `;
 };

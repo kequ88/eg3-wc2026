@@ -111,44 +111,70 @@ const buildCards = () => {
 };
 
 // ── PICKS FLAGS ROW ───────────────────────────────────────────
-// Show flags ordered: Winner → Finalists → Semis (left to right)
+// Show exactly 4 flags: Champion → Runner-up → 3rd → 4th
+// Derived from Final (m104), 3rd place (m103), and SF picks (m101, m102)
 const buildPicksFlags = (p) => {
   const bp = p.bracketPicks;
   if (!bp) return '';
 
-  const winner    = bp.final?.['m104'];
-  const finalists = Object.values(bp.sf || {}).filter(Boolean);
-  const semis     = Object.values(bp.r16 || {})
-    .filter(Boolean)
-    .filter(t => !finalists.includes(t) && t !== winner)
-    .slice(0, 2); // show top 2 semis only to keep it compact
+  // Champion — user's Final winner pick
+  const champion = bp.final?.['m104'] || null;
 
-  const wTeam = winner ? findTeam(winner) : null;
+  // Runner-up — the finalist who lost (in Final but not Champion)
+  // The two finalists come from SF winners: m101 winner and m102 winner
+  const sf1 = bp.sf?.['m101'] || null;
+  const sf2 = bp.sf?.['m102'] || null;
+  const runnerUp = sf1 && sf2
+    ? (sf1 === champion ? sf2 : sf1)
+    : null;
 
-  // Build flag chips — winner first, then finalists, then semis
-  const chips = [];
+  // 3rd place — user's bronze match winner pick
+  const third = bp.third?.['m103'] || null;
 
-  if (winner) {
-    chips.push(`<span class="pick-flag-chip pick-winner" title="Winner: ${winner}">
-      ${wTeam?.f ?? '🏳'} <span class="chip-label">W</span>
-    </span>`);
+  // 4th place — the bronze match loser
+  // Bronze participants are the two SF losers
+  // SF losers = whichever SF team was NOT picked as SF winner
+  // We need the SF participants — stored in r16 picks feeding into SF
+  // Simpler: from QF picks that fed into SF
+  // Actually simplest: third and fourth are both from SF losers
+  // fourth = the bronze participant who wasn't picked as 3rd
+  const sfLosers = [];
+  if (bp.sf) {
+    // We know sf1 and sf2 are the SF winners
+    // SF losers are the teams that played sf1/sf2 but lost
+    // These come from QF picks: m97 vs m98 → m101, m99 vs m100 → m102
+    const qf1a = bp.qf?.['m97'] || null;
+    const qf1b = bp.qf?.['m98'] || null;
+    const qf2a = bp.qf?.['m99'] || null;
+    const qf2b = bp.qf?.['m100'] || null;
+    // SF match 101 = winner of m97 vs winner of m98
+    // loser of m101 = whichever of qf1a/qf1b was NOT picked as sf1
+    if (qf1a && qf1b && sf1) sfLosers.push(sf1 === qf1a ? qf1b : qf1a);
+    if (qf2a && qf2b && sf2) sfLosers.push(sf2 === qf2a ? qf2b : qf2a);
   }
+  const fourth = sfLosers.find(t => t !== third) || null;
 
-  finalists.filter(t => t !== winner).forEach(team => {
-    const t = findTeam(team);
-    chips.push(`<span class="pick-flag-chip pick-finalist" title="Finalist: ${team}">
-      ${t?.f ?? '🏳'} <span class="chip-label">F</span>
-    </span>`);
-  });
+  const picks = [
+    { team: champion, label: '🥇', cls: 'pick-winner'   },
+    { team: runnerUp, label: '🥈', cls: 'pick-finalist' },
+    { team: third,    label: '🥉', cls: 'pick-third'    },
+    { team: fourth,   label: '4️⃣', cls: 'pick-fourth'  },
+  ];
 
-  semis.forEach(team => {
-    const t = findTeam(team);
-    chips.push(`<span class="pick-flag-chip pick-semi" title="Semi: ${team}">
-      ${t?.f ?? '🏳'}
-    </span>`);
-  });
+  const chips = picks
+    .filter(({ team }) => team)
+    .map(({ team, label, cls }) => {
+      const t = findTeam(team);
+      const flag = t?.f ?? '🏳';
+      // Show flag emoji + truncated name for cross-platform clarity
+      const short = team.length > 8 ? team.slice(0, 7) + '…' : team;
+      return `<span class="pick-flag-chip ${cls}" title="${label} ${team}">
+        <span class="chip-flag">${flag}</span>
+        <span class="chip-name">${short}</span>
+      </span>`;
+    }).join('');
 
-  return `<div class="pick-flags-row">${chips.join('')}</div>`;
+  return chips ? `<div class="pick-flags-row">${chips}</div>` : '';
 };
 
 // ── ROUND TAB SWITCH ──────────────────────────────────────────

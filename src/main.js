@@ -9,6 +9,7 @@ import './styles/components.css';
 import './styles/leaderboard.css';
 import './styles/teams.css';
 import './styles/picks.css';
+import './styles/my-bracket.css';
 
 // ── UI MODULES ────────────────────────────────────────────────
 import {
@@ -23,6 +24,7 @@ import { renderProfile }                               from './ui/profile.js';
 import { renderTeamsPage, filterTeamsPage }            from './ui/teams-page.js';
 
 import { warmupFirestore } from './services/firestore.js';
+import { renderMyBracket } from './ui/my-bracket.js';
 import {
   renderPicksTab,
   identityChanged, identityNext,
@@ -43,6 +45,7 @@ renderSplash();
 
 registerTabCallback('board',   renderLeaderboard);
 registerTabCallback('teams',   renderTeamsPage);
+registerTabCallback('mybracket', renderMyBracket);
 registerTabCallback('profile', () => {
   if (currentProfileId) renderProfile(currentProfileId);
 });
@@ -53,6 +56,14 @@ setInterval(updateDeadlineBanner, 60_000);
 // Warm up Firestore connection immediately on load
 // so the first Next button click is instant, not 5-10 seconds
 warmupFirestore();
+
+// ── REVEAL MY BRACKET TAB if user has submitted ─────────────
+const revealMyBracketTab = () => {
+  const myHouse = localStorage.getItem('eg3_my_house');
+  const tab = document.getElementById('mybracket-tab');
+  if (tab && myHouse) tab.style.display = '';
+};
+revealMyBracketTab(); // check on load
 
 // ── PROFILE STATE ─────────────────────────────────────────────
 let currentProfileId = null;

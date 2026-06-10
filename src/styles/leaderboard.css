@@ -172,23 +172,34 @@
 .pick-flag-chip {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  padding: 3px 8px;
+  gap: 4px;
+  padding: 3px 8px 3px 6px;
   border-radius: 20px;
-  font-size: 14px;
   border: 1px solid var(--border);
   background: var(--bg);
+  white-space: nowrap;
 }
 
-.chip-label {
-  font-size: 9px;
-  font-weight: 700;
-  opacity: .7;
+.chip-flag {
+  font-size: 16px;
+  line-height: 1;
+  /* Force emoji rendering on Windows */
+  font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
 }
 
-.pick-winner  { background: var(--gold-light); border-color: var(--gold); }
-.pick-finalist { background: #EEF2FF; border-color: #c7d2fe; }
-.pick-semi    { background: var(--bg); border-color: var(--border); }
+.chip-name {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text);
+  max-width: 70px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pick-winner   { background: var(--gold-light);  border-color: var(--gold); }
+.pick-finalist { background: #F0F0F4; border-color: #bbb; }
+.pick-third    { background: #FFF5EC; border-color: #D2691E; }
+.pick-fourth   { background: var(--bg); border-color: var(--border); }
 
 /* ── MY CARD ── */
 .my-card {
