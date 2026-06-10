@@ -269,7 +269,7 @@ export const groupsNextStep = () => {
 };
 
 // ── R32 BACK ──────────────────────────────────────────────────
-export const r32Back = () => goToStep('groups');
+export const r32Back = () => { window.scrollTo(0, 0); goToStep('groups'); };
 
 // ── R32 → BRACKET ─────────────────────────────────────────────
 export const r32NextStep = () => {
@@ -280,8 +280,7 @@ export const r32NextStep = () => {
 
 // ── BRACKET BACK ─────────────────────────────────────────────
 export const bracketBack = () => {
-  const standings = getGroupStandings();
-  const r32p      = getR32Picks();
+  window.scrollTo(0, 0);
   goToStep('r32');
 };
 
@@ -313,8 +312,9 @@ const renderSuccessScreen = (draft) => {
       <div class="success-trophy">🎉</div>
       <div class="success-title">You're in, ${draft?.name || 'Neighbour'}!</div>
       <div class="success-sub">
-        Your predictions are locked in.<br>
-        The leaderboard goes live when the tournament starts on June 12.
+        Your predictions are saved!<br>
+        Changed your mind? You can resubmit anytime before June 12, 12:30 AM MYT.<br>
+        The leaderboard goes fully live when the tournament starts.
       </div>
 
       <div class="success-picks">
@@ -328,10 +328,17 @@ const renderSuccessScreen = (draft) => {
         </div>
       </div>
 
-      <button class="btn primary btn-full"
-        onclick="App.switchTab('board')">
-        View Leaderboard 🏅
-      </button>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="btn primary btn-full"
+          onclick="App.switchTab('board')">
+          View Leaderboard 🏅
+        </button>
+        <button class="btn btn-full"
+          onclick="App.resubmit()"
+          style="font-size:13px">
+          ✏️ Change my predictions
+        </button>
+      </div>
     </div>`;
 };
 
@@ -348,3 +355,9 @@ const showMsg = (id, text, color = 'var(--red)') => {
 
 // Re-export step handlers so main.js can attach to window.App
 export { pickGroupTeam, pickR32, pickBracket };
+
+// Allow user to redo their predictions from scratch
+export const resubmit = () => {
+  window.scrollTo(0, 0);
+  goToStep('groups');
+};

@@ -66,17 +66,16 @@ export const autoSave = async (houseId, fields) => {
   }
 };
 
-// ── FIRST SUBMISSION CHECK ────────────────────────────────────
-// Only used at final submit to enforce one-per-house rule.
-// We accept the two-trip cost here because it only happens once.
+// ── FINAL SUBMISSION ─────────────────────────────────────────
+// Allows resubmission before deadline — replaces previous picks entirely.
+// submittedAt is always updated to the new submission time.
 export const submitPick = async (houseId, fields) => {
   try {
-    const ref      = doc(db, COL, houseId);
-    const existing = await getDoc(ref);
-    if (existing.exists() && existing.data().progress === 'done') {
-      return { ok: false, msg: `🏠 ${houseId} has already submitted!` };
-    }
-    await setDoc(ref, { houseId, ...fields, submittedAt: Date.now() }, { merge: true });
+    await setDoc(
+      doc(db, COL, houseId),
+      { houseId, ...fields, submittedAt: Date.now(), lastUpdated: Date.now() },
+      { merge: true }
+    );
     return { ok: true };
   } catch (err) {
     console.error('[Firestore] submitPick:', err);

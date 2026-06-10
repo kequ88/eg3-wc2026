@@ -26,7 +26,7 @@ import { warmupFirestore } from './services/firestore.js';
 import {
   renderPicksTab,
   identityChanged, identityNext,
-  resumeDraft,
+  resumeDraft, resubmit,
   groupsNextStep, r32Back, r32NextStep,
   bracketBack, bracketSubmitStep,
   pickGroupTeam, pickR32, pickBracket,
@@ -76,6 +76,7 @@ window.App = {
   identityChanged,
   identityNext,
   resumeDraft,
+  resubmit,
 
   // ── GROUPS STEP ────────────────────────────────────────────
   pickGroupTeam,

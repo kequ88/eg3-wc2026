@@ -99,6 +99,7 @@ const STAGE_RANK = {
   'Semi-finals': 4,
   'Final': 5,
   'Winner': 6,
+  'Third': 5, // same rank as Final — reached the last 4
 };
 
 export const calcBracketScore = (pick, teamStatus) => {
@@ -138,6 +139,12 @@ export const calcBracketScore = (pick, teamStatus) => {
   const winner = bp.final?.['m104'];
   if (winner && teamStatus[winner]?.reachedStage === 'Winner') {
     pts += KO_PTS.winner;
+  }
+
+  // 3rd place — +8 if team actually finished 3rd
+  const third = bp.third?.['m103'];
+  if (third && teamStatus[third]?.reachedStage === 'Third') {
+    pts += 8;
   }
 
   return pts;
@@ -195,6 +202,17 @@ export const buildScoreBreakdown = (pick, matchResults, teamStatus) => {
     });
     rows.push({ round: label, pts: roundPts, detail });
   });
+
+  // 3rd place bonus
+  const third = bp.third?.['m103'];
+  if (third && teamStatus) {
+    const isThird = teamStatus[third]?.reachedStage === 'Third';
+    rows.push({
+      round: '3rd Place Match',
+      pts: isThird ? 8 : 0,
+      detail: [{ team: third, pts: isThird ? 8 : 0 }],
+    });
+  }
 
   // Winner bonus
   const winner = bp.final?.['m104'];

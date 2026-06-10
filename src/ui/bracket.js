@@ -13,7 +13,7 @@ import { findTeam }  from '../data/teams.js';
 import { autoSave, submitPick } from '../services/firestore.js';
 import { Analytics } from '../services/analytics.js';
 
-let bracketPicks   = { r16: {}, qf: {}, sf: {}, final: {} };
+let bracketPicks   = { r16: {}, qf: {}, sf: {}, final: {}, third: {} };
 let groupStandings = {};
 let r32picks       = {};
 let currentHouseId = null;
@@ -28,6 +28,7 @@ export const renderBracketStep = (houseId, standings, r32p, existingPicks = {}) 
     qf:    { ...(existingPicks.qf    || {}) },
     sf:    { ...(existingPicks.sf    || {}) },
     final: { ...(existingPicks.final || {}) },
+    third: { ...(existingPicks.third || {}) },
   };
 
   const el = document.getElementById('step-bracket');
@@ -69,6 +70,7 @@ const buildAllRounds = () => {
     ${buildRound('Quarter-finals', QF_MATCHES,  qfp,  'qf')}
     ${buildRound('Semi-finals',    SF_MATCHES,  sfp,  'sf')}
     ${buildFinalRound(finp)}
+    ${buildThirdPlaceRound()}
     ${buildWinnerDisplay()}
   `;
 };
@@ -99,6 +101,32 @@ const buildFinalRound = ({ teamA, teamB }) => {
       <div class="bracket-round-label">🏆 The Final — 19 July, New York</div>
       <div class="bracket-matches">${card}</div>
     </div>`;
+};
+
+// ── THIRD PLACE MATCH ─────────────────────────────────────────
+const buildThirdPlaceRound = () => {
+  // The two SF losers play M103 — we derive them from SF picks
+  // SF losers = teams in SF that were NOT picked as winners
+  const sfPairs = SF_MATCHES.map(m => {
+    const { teamA, teamB } = computeSFParticipants(bracketPicks.qf)[m.id] || {};
+    const winner = bracketPicks.sf?.[m.id];
+    const loser  = winner === teamA ? teamB : winner === teamB ? teamA : null;
+    return loser;
+  }).filter(Boolean);
+
+  const [loserA, loserB] = sfPairs;
+  const picked = bracketPicks.third?.['m103'] || null;
+  const match  = { id: 'm103', num: 103, date: 'Sat 18 Jul, Miami' };
+  const card   = buildMatchCard(match, loserA || null, loserB || null, picked, 'third');
+
+  return \`
+    <div class="bracket-round" style="border-top:1px solid var(--border);padding-top:1rem;margin-top:0.5rem">
+      <div class="bracket-round-label" style="color:var(--muted)">🥉 3rd Place Match — 18 July, Miami</div>
+      <div class="bracket-matches">\${card}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">
+        Correct 3rd place pick earns <strong>+8 pts</strong>
+      </div>
+    </div>\`;
 };
 
 // ── WINNER DISPLAY ────────────────────────────────────────────
@@ -188,7 +216,7 @@ export const pickBracket = (roundKey, matchId, team) => {
 // When a pick changes, clear all picks in later rounds that
 // depended on the changed match's outcome.
 const cascadeClear = (roundKey, matchId) => {
-  const order = ['r16', 'qf', 'sf', 'final'];
+  const order = ['r16', 'qf', 'sf', 'final', 'third'];
   const idx   = order.indexOf(roundKey);
   if (idx < 0) return;
 
@@ -235,6 +263,7 @@ export const bracketSubmit = async () => {
 
   if (result.ok) {
     Analytics.pickSubmitted(currentHouseId, bracketPicks.final['m104']);
+    localStorage.setItem('eg3_my_house', currentHouseId);
     return true;
   } else {
     setMsg(result.msg || 'Save failed — please try again.', 'var(--red)');

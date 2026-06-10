@@ -159,3 +159,51 @@
   color: var(--muted);
   font-family: var(--font-sans);
 }
+
+/* ── PICK FLAGS ROW ── */
+.pick-flags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+  align-items: center;
+}
+
+.pick-flag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: 14px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.chip-label {
+  font-size: 9px;
+  font-weight: 700;
+  opacity: .7;
+}
+
+.pick-winner  { background: var(--gold-light); border-color: var(--gold); }
+.pick-finalist { background: #EEF2FF; border-color: #c7d2fe; }
+.pick-semi    { background: var(--bg); border-color: var(--border); }
+
+/* ── MY CARD ── */
+.my-card {
+  border-left: 4px solid var(--green);
+  background: var(--green-light);
+}
+.my-card:hover { border-color: var(--green); }
+
+.you-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--green-dark);
+  background: var(--green-light);
+  padding: 1px 7px;
+  border-radius: 10px;
+  border: 1px solid var(--green);
+  margin-left: 4px;
+}
