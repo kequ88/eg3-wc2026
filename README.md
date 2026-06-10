@@ -142,8 +142,7 @@ VITE_FIREBASE_APP_ID=1:123456789:web:abc123
 
 ## Step 5 — GA4 is already configured
 
-Your GA4 Measurement ID (`G-5S676SZZLD`) is already hardcoded in `index.html`.
-No action needed — it just works.
+Your GA4 Measurement ID for Google Analytics to be added later.
 
 ---
 
