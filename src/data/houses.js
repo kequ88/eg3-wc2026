@@ -27,7 +27,7 @@ export const VALID_HOUSES = Object.freeze({
   'L71' : excl(range(1, 56), 55),
   'L72' : excl(range(1, 50), 45, 47, 49),
   'L73' : excl(range(1, 58), 57),
-  'L74' : odd(1, 45),
+  'L74' : even(2,46),
 });
 
 // All lane keys as a sorted array — used to populate the dropdown.
