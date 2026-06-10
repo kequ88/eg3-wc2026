@@ -1,0 +1,223 @@
+/* src/styles/main.css
+ *
+ * Global styles only — variables, reset, typography, layout shell.
+ * Component-specific styles live in their own files.
+ *
+ * CSS CUSTOM PROPERTIES (variables):
+ *   Defined on :root so every file can use them.
+ *   Change a colour here → changes everywhere instantly.
+ */
+
+:root {
+  /* Brand colours */
+  --green:       #00843D;
+  --green-dark:  #005C2A;
+  --green-light: #E6F4EC;
+  --gold:        #C9A84C;
+  --gold-light:  #FDF6E3;
+  --red:         #C0392B;
+  --red-light:   #FDECEA;
+
+  /* Neutral palette */
+  --bg:      #F7F7F5;
+  --surface: #FFFFFF;
+  --border:  #E0E0D8;
+  --text:    #1A1A1A;
+  --muted:   #6B6B65;
+
+  /* Spacing & shape */
+  --radius:  10px;
+  --radius-lg: 16px;
+
+  /* Typography */
+  --font-sans:    'DM Sans', sans-serif;
+  --font-display: 'Bebas Neue', sans-serif;
+}
+
+/* ── RESET ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── HEADER ── */
+#app-header {
+  background: var(--green-dark);
+  padding: 1.25rem 1rem 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+#app-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent, transparent 18px,
+    rgba(255,255,255,.03) 18px, rgba(255,255,255,.03) 36px
+  );
+}
+
+#app-header h1 {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 5.5vw, 40px);
+  color: #fff;
+  letter-spacing: 2px;
+  line-height: 1.15;
+  position: relative;
+}
+
+#app-header h1 span { color: var(--gold); }
+
+#app-header p {
+  color: rgba(255,255,255,.65);
+  font-size: 12px;
+  margin-top: 4px;
+  position: relative;
+}
+
+/* ── DEADLINE BANNER ── */
+#deadline-banner {
+  background: var(--green);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  padding: 7px 1rem;
+}
+
+#deadline-banner.closed {
+  background: var(--red);
+}
+
+/* ── MAIN CONTAINER ── */
+.container {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 1.25rem 1rem;
+}
+
+/* ── SECTION VISIBILITY ── */
+.section { display: none; }
+.section.active { display: block; }
+
+/* ── SHARED CARD ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 12px;
+}
+
+/* ── SHARED FORM ELEMENTS ── */
+label.field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 6px;
+}
+
+input[type="text"],
+input[type="number"],
+select {
+  width: 100%;
+  padding: 9px 12px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+  appearance: none;
+}
+
+input:focus, select:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(0,132,61,.12);
+}
+
+/* ── SHARED BUTTONS ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  background: var(--surface);
+  color: var(--text);
+  transition: background .15s, border-color .15s;
+  text-decoration: none;
+}
+
+.btn:hover  { background: var(--bg); }
+.btn:disabled { opacity: .35; cursor: not-allowed; }
+
+.btn.primary {
+  background: var(--green);
+  color: #fff;
+  border-color: var(--green);
+}
+.btn.primary:hover { background: var(--green-dark); border-color: var(--green-dark); }
+
+.btn-row {
+  display: flex;
+  gap: 8px;
+}
+.btn-row .btn { flex: 1; }
+
+/* ── SHARED UTILITY ── */
+.pos  { color: var(--green); font-weight: 600; }
+.neg  { color: var(--red);   font-weight: 600; }
+.gold { color: #7a5c00;      font-weight: 600; }
+
+.empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--muted);
+  font-size: 14px;
+}
+.empty big { font-size: 40px; display: block; margin-bottom: 10px; }
+
+.msg {
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 10px;
+  min-height: 20px;
+}
+
+.btn-back-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 12px;
+  font-family: var(--font-sans);
+}
+.btn-back-nav:hover { color: var(--text); }

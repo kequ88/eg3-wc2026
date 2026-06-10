@@ -1,0 +1,373 @@
+/* src/styles/picks.css
+ * Styles for the 3-step submission flow:
+ *   Step 1 — Group stage cards
+ *   Step 2 — Round of 32 (walkovers + clickable matches)
+ *   Step 3 — Progressive bracket tree
+ */
+
+/* ── STEP HEADER ── */
+.step-header {
+  margin-bottom: 1.25rem;
+}
+.step-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.step-sub {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ── STEP PROGRESS BAR (groups) ── */
+.groups-progress-bar {
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  margin-bottom: 6px;
+  overflow: hidden;
+}
+.groups-progress-fill {
+  height: 100%;
+  background: var(--green);
+  border-radius: 3px;
+  transition: width .3s ease;
+}
+.groups-progress-label {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+
+/* ── GROUP CARDS GRID ── */
+.groups-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+
+.group-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color .15s;
+}
+.group-card.group-done {
+  border-color: var(--green);
+}
+
+.group-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.group-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .6px;
+}
+.group-done-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--green);
+}
+
+.group-teams {
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ── GROUP TEAM BUTTON ── */
+.group-team-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: none;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--text);
+  text-align: left;
+  width: 100%;
+  transition: background .1s, border-color .1s;
+}
+.group-team-btn:hover {
+  background: var(--bg);
+  border-color: var(--border);
+}
+.group-team-btn.selected-first {
+  background: #FDF3DC;
+  border-color: var(--gold);
+}
+.group-team-btn.selected-second {
+  background: #F0F0F0;
+  border-color: #aaa;
+}
+.gt-flag { font-size: 20px; flex-shrink: 0; }
+.gt-name { flex: 1; font-size: 13px; }
+.gt-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  margin-left: auto;
+}
+.badge-gold   { background: var(--gold-light); color: #7a5c00; border: 1px solid var(--gold); }
+.badge-silver { background: #F0F0F0; color: #555; border: 1px solid #bbb; }
+
+/* ── FULL WIDTH BUTTON ── */
+.btn-full { width: 100%; padding: 12px; font-size: 15px; margin-top: 4px; }
+
+/* ── WALKOVER SECTION ── */
+.walkover-section {
+  background: var(--green-light);
+  border: 1px solid var(--green);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 1rem;
+}
+.walkover-header {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--green-dark);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 10px;
+}
+.walkover-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 6px;
+}
+.walkover-card {
+  background: var(--surface);
+  border: 1px solid var(--green);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.walkover-team {
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.walkover-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--green-dark);
+}
+.walkover-note {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* ── R32 DIVIDER ── */
+.r32-divider {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  padding: 10px 0 8px;
+  border-top: 1px solid var(--border);
+  margin-bottom: 10px;
+}
+
+/* ── R32 MATCH CARD ── */
+.r32-match-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 8px;
+  transition: border-color .15s;
+}
+.r32-match-card.r32-picked {
+  border-color: var(--green);
+}
+.r32-match-label {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+.r32-match-teams {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.vs-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+/* ── R32 TEAM BUTTON ── */
+.r32-team-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--text);
+  transition: all .1s;
+  min-width: 0;
+}
+.r32-team-btn:hover       { border-color: var(--green); background: var(--green-light); }
+.r32-team-btn.r32-selected { background: var(--green-light); border-color: var(--green); font-weight: 600; }
+.r32-team-btn.r32-dimmed   { opacity: .4; }
+.r32-team-btn.r32-team-empty { color: var(--muted); font-style: italic; cursor: default; }
+.r32-flag  { font-size: 18px; flex-shrink: 0; }
+.r32-name  { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.r32-tick  { font-size: 13px; color: var(--green); margin-left: auto; flex-shrink: 0; }
+.r32-progress {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 4px;
+}
+
+/* ── BRACKET ROUNDS ── */
+.bracket-round {
+  margin-bottom: 1.5rem;
+}
+.bracket-round-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.bracket-final-round .bracket-round-label {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+.bracket-matches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 8px;
+}
+
+/* ── BRACKET MATCH CARD ── */
+.bracket-match {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  transition: border-color .15s;
+}
+.bracket-match.bracket-match-done   { border-color: var(--green); }
+.bracket-match.bracket-match-locked { opacity: .6; }
+.bracket-match-label {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+.bracket-match-teams {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── BRACKET TEAM BUTTON ── */
+.bracket-team-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--text);
+  transition: all .1s;
+  min-width: 0;
+}
+.bracket-team-btn:hover:not(:disabled)  { border-color: var(--green); background: var(--green-light); }
+.bracket-team-btn.bracket-selected      { background: var(--green-light); border-color: var(--green); font-weight: 600; }
+.bracket-team-btn.bracket-dimmed        { opacity: .35; }
+.bracket-team-btn.bracket-locked        { cursor: not-allowed; }
+.bracket-team-btn.bracket-team-tbd      { color: var(--muted); font-style: italic; cursor: default; }
+
+/* ── WINNER DISPLAY ── */
+.winner-display {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  border-radius: var(--radius);
+  margin: 1rem 0;
+}
+.winner-empty {
+  background: var(--bg);
+  border: 2px dashed var(--border);
+}
+.winner-selected {
+  background: var(--gold-light);
+  border: 2px solid var(--gold);
+}
+.winner-trophy { font-size: 40px; margin-bottom: 6px; }
+.winner-flag   { font-size: 48px; margin-bottom: 4px; }
+.winner-name   { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.winner-label  { font-size: 13px; color: var(--muted); }
+
+/* ── SUBMISSION SUCCESS SCREEN ── */
+.success-screen {
+  text-align: center;
+  padding: 2rem 1rem;
+}
+.success-trophy  { font-size: 64px; margin-bottom: 12px; }
+.success-title   { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.success-sub     { font-size: 14px; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.6; }
+.success-picks   { text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; margin-bottom: 1.5rem; }
+.success-pick-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--bg); font-size: 13px; }
+.success-pick-row:last-child { border-bottom: none; }
+.success-pick-label { color: var(--muted); font-size: 12px; }
+
+/* ── RESUME BANNER ── */
+.resume-banner {
+  background: var(--gold-light);
+  border: 1px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.resume-text  { font-size: 13px; color: #7a5c00; }
+.resume-text strong { display: block; margin-bottom: 2px; }

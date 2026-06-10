@@ -1,0 +1,29 @@
+# netlify.toml
+#
+# This tells Netlify HOW to build and serve your app.
+# Netlify reads this file automatically when you connect your repo.
+
+[build]
+  # Command Netlify runs to build your app
+  command = "npm install && npm run build"
+
+  # Folder Netlify serves to the public after build
+  # Vite outputs to /dist — must match vite.config.js outDir
+  publish = "dist"
+
+# Redirect rule — important for single-page apps (SPA)
+# Without this, if someone refreshes on any page, they get a 404.
+# This tells Netlify: "for any URL, always serve index.html"
+# and let the JavaScript router handle the rest.
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
+
+# Security headers — good practice for any web app
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options        = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy        = "strict-origin-when-cross-origin"

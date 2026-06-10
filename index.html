@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Elmina Green Three — World Cup 2026 Predictor ⚽</title>
+
+  <!--
+    WHY THIS FILE IS SO EMPTY:
+    In a properly structured app, index.html is just a SHELL.
+    It has no logic, no secrets, no inline styles.
+    Everything is imported via src/main.js.
+
+    Vite reads this file, finds the <script> tag below,
+    follows all the imports, and bundles everything into /dist.
+  -->
+
+  <!-- Fonts — loaded here so they apply globally -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Google Analytics — loads before app so no events are missed -->
+  <script
+    async
+    src="https://www.googletagmanager.com/gtag/js?id=G-5S676SZZLD"
+  ></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-5S676SZZLD');
+  </script>
+</head>
+<body>
+
+  <!--
+    THE APP SHELL — just empty containers.
+    JavaScript fills these in at runtime.
+
+    This pattern is called a "Single Page Application" (SPA).
+    There is only one HTML file. JS handles all the rendering.
+  -->
+
+  <header id="app-header"></header>
+
+  <div id="deadline-banner"></div>
+
+  <nav id="app-tabs"></nav>
+
+  <main id="app-main" class="container"></main>
+
+  <!-- Rules splash overlay — rendered by ui/splash.js -->
+  <div id="rules-splash"></div>
+
+  <!--
+    ENTRY POINT:
+    type="module" tells the browser this is an ES Module.
+    Vite intercepts this in dev mode.
+    In production, Vite replaces it with the bundled output.
+  -->
+  <script type="module" src="/src/main.js"></script>
+
+</body>
+</html>

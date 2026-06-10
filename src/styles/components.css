@@ -1,0 +1,302 @@
+/* src/styles/components.css — reusable UI components */
+
+/* ── NAV TABS ── */
+#app-tabs {
+  display: flex;
+  background: var(--green-dark);
+  border-top: 1px solid rgba(255,255,255,.1);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tab {
+  flex: 1;
+  min-width: 60px;
+  padding: 10px 6px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255,255,255,.6);
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color .15s, border-color .15s;
+}
+
+.tab.active       { color: var(--gold); border-bottom-color: var(--gold); }
+.tab:hover:not(.active) { color: #fff; }
+
+/* ── ROUND TABS (leaderboard) ── */
+.round-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+  scrollbar-width: none;
+}
+
+.round-tab {
+  padding: 5px 12px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  white-space: nowrap;
+  color: var(--muted);
+  transition: background .15s, color .15s;
+}
+
+.round-tab.active {
+  background: var(--green-dark);
+  color: #fff;
+  border-color: var(--green-dark);
+}
+
+/* ── TEAM GRID ── */
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(138px, 1fr));
+  gap: 6px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 4px;
+  margin-bottom: 10px;
+  scrollbar-width: thin;
+}
+
+.team-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: background .1s, border-color .1s;
+}
+
+.team-btn:hover           { border-color: var(--green); background: var(--green-light); }
+.team-btn.selected        { background: var(--green-light); border-color: var(--green); color: var(--green-dark); font-weight: 500; }
+.team-btn.winner-pick     { background: var(--gold-light); border-color: var(--gold); color: #7a5c00; font-weight: 600; }
+
+/* ── TAGS (selected semis) ── */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+  min-height: 28px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--green-light);
+  color: var(--green-dark);
+}
+
+.tag button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  color: inherit;
+  padding: 0;
+}
+
+/* ── BADGES ── */
+.count-badge {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 20px;
+  background: var(--green-light);
+  color: var(--green-dark);
+  margin-bottom: 10px;
+}
+
+.pts {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: var(--green-light);
+  color: var(--green-dark);
+  white-space: nowrap;
+}
+
+.pts-pending {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--gold-light);
+  color: #7a5c00;
+  white-space: nowrap;
+}
+
+.house-tag {
+  font-size: 11px;
+  font-weight: 400;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: var(--bg);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.role-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+.role-semi   { background: var(--green-light); color: var(--green-dark); }
+.role-final  { background: #EEF2FF; color: #3730A3; }
+.role-winner { background: var(--gold-light);  color: #7a5c00; }
+
+/* ── AVATARS ── */
+.lb-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.lb-avatar-placeholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--green-light);
+  color: var(--green-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* ── AVATAR UPLOAD (pick form) ── */
+.avatar-upload-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.avatar-upload-box {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px dashed var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.avatar-upload-box:hover { border-color: var(--green); }
+
+.avatar-upload-label {
+  font-size: 13px;
+  color: var(--muted);
+}
+.avatar-upload-label strong { display: block; color: var(--text); margin-bottom: 2px; }
+
+/* ── STEP INDICATOR ── */
+.step-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+.step-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: all .2s;
+}
+.step-dot.done   { background: var(--green); }
+.step-dot.active { background: var(--green); width: 22px; border-radius: 4px; }
+.step-text       { font-size: 12px; color: var(--muted); margin-left: 4px; }
+
+/* ── SEARCH ── */
+.search-wrap { position: relative; margin-bottom: 8px; }
+.search-wrap input { padding-left: 34px; }
+.search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+/* ── WINNER BOX ── */
+.winner-box {
+  border: 2px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 12px;
+  background: var(--gold-light);
+  margin-bottom: 12px;
+}
+.winner-box .label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #7a5c00;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 8px;
+}
+
+/* ── HINT ── */
+.hint {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+/* ── CLOSED BOX ── */
+.closed-box {
+  background: var(--red-light);
+  border: 1px solid #f5c6c6;
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+.closed-box h3 { color: var(--red); font-size: 16px; margin-bottom: 8px; }
+.closed-box p  { font-size: 13px; color: var(--muted); }
+
+/* ── HOUSE ROW ── */
+.house-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
