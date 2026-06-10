@@ -105,12 +105,13 @@ const buildFinalRound = ({ teamA, teamB }) => {
 
 // ── THIRD PLACE MATCH ─────────────────────────────────────────
 const buildThirdPlaceRound = () => {
-  // The two SF losers play M103 — we derive them from SF picks
-  // SF losers = teams in SF that were NOT picked as winners
+  // Derive SF losers from SF picks
   const sfPairs = SF_MATCHES.map(m => {
-    const { teamA, teamB } = computeSFParticipants(bracketPicks.qf)[m.id] || {};
+    const parts = computeSFParticipants(bracketPicks.qf);
+    const pair  = parts[m.id] || {};
     const winner = bracketPicks.sf?.[m.id];
-    const loser  = winner === teamA ? teamB : winner === teamB ? teamA : null;
+    const loser  = winner === pair.teamA ? pair.teamB
+                 : winner === pair.teamB ? pair.teamA : null;
     return loser;
   }).filter(Boolean);
 
@@ -119,14 +120,13 @@ const buildThirdPlaceRound = () => {
   const match  = { id: 'm103', num: 103, date: 'Sat 18 Jul, Miami' };
   const card   = buildMatchCard(match, loserA || null, loserB || null, picked, 'third');
 
-  return \`
-    <div class="bracket-round" style="border-top:1px solid var(--border);padding-top:1rem;margin-top:0.5rem">
-      <div class="bracket-round-label" style="color:var(--muted)">🥉 3rd Place Match — 18 July, Miami</div>
-      <div class="bracket-matches">\${card}</div>
-      <div style="font-size:12px;color:var(--muted);margin-top:6px">
-        Correct 3rd place pick earns <strong>+8 pts</strong>
-      </div>
-    </div>\`;
+  return [
+    '<div class="bracket-round" style="border-top:1px solid var(--border);padding-top:1rem;margin-top:0.5rem">',
+    '<div class="bracket-round-label" style="color:var(--muted)">3rd Place Match - 18 July, Miami</div>',
+    '<div class="bracket-matches">' + card + '</div>',
+    '<div style="font-size:12px;color:var(--muted);margin-top:6px">Correct 3rd place pick earns <strong>+8 pts</strong></div>',
+    '</div>',
+  ].join('');
 };
 
 // ── WINNER DISPLAY ────────────────────────────────────────────
