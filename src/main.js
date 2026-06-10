@@ -22,6 +22,7 @@ import { renderLeaderboard, setBoardRound }            from './ui/leaderboard.js
 import { renderProfile }                               from './ui/profile.js';
 import { renderTeamsPage, filterTeamsPage }            from './ui/teams-page.js';
 
+import { warmupFirestore } from './services/firestore.js';
 import {
   renderPicksTab,
   identityChanged, identityNext,
@@ -48,6 +49,10 @@ registerTabCallback('profile', () => {
 
 updateDeadlineBanner();
 setInterval(updateDeadlineBanner, 60_000);
+
+// Warm up Firestore connection immediately on load
+// so the first Next button click is instant, not 5-10 seconds
+warmupFirestore();
 
 // ── PROFILE STATE ─────────────────────────────────────────────
 let currentProfileId = null;

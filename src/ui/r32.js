@@ -160,9 +160,13 @@ const autoSaveR32 = () => {
 };
 
 // ── NAV ───────────────────────────────────────────────────────
-export const r32Next = async () => {
-  if (Object.keys(r32picks).length < 8) return;
-  await autoSave(currentHouseId, { r32picks, progress: 'bracket' });
+export const r32Next = () => {
+  if (Object.keys(r32picks).length < 8) return null;
+
+  // Fire-and-forget — navigate immediately, save in background
+  autoSave(currentHouseId, { r32picks, progress: 'bracket' })
+    .catch(err => console.warn('[r32] Final save failed:', err));
+
   Analytics.tabViewed('bracket');
   return r32picks;
 };

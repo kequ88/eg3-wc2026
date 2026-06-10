@@ -262,8 +262,8 @@ const goToStep = (step, draft = null) => {
 };
 
 // ── GROUPS → R32 ──────────────────────────────────────────────
-export const groupsNextStep = async () => {
-  const standings = await groupsNext();
+export const groupsNextStep = () => {
+  const standings = groupsNext(); // non-blocking now
   if (!standings) return;
   goToStep('r32');
 };
@@ -272,10 +272,9 @@ export const groupsNextStep = async () => {
 export const r32Back = () => goToStep('groups');
 
 // ── R32 → BRACKET ─────────────────────────────────────────────
-export const r32NextStep = async () => {
-  const r32p = await r32Next();
+export const r32NextStep = () => {
+  const r32p = r32Next(); // non-blocking now
   if (!r32p) return;
-  const standings = getGroupStandings();
   goToStep('bracket');
 };
 

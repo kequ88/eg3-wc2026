@@ -157,14 +157,18 @@ const autoSaveGroups = () => {
 };
 
 // ── NEXT STEP ─────────────────────────────────────────────────
-export const groupsNext = async () => {
+export const groupsNext = () => {
   const complete = Object.values(groupStandings)
     .filter(s => s?.first && s?.second).length === 12;
-  if (!complete) return;
+  if (!complete) return null;
 
-  await autoSave(currentHouseId, { groupStandings, progress: 'r32' });
+  // Fire-and-forget — don't block navigation on the save
+  // Debounce saves already cover this; this is just a final confirmation
+  autoSave(currentHouseId, { groupStandings, progress: 'r32' })
+    .catch(err => console.warn('[groups] Final save failed:', err));
+
   Analytics.tabViewed('r32');
-  return groupStandings; // caller uses this to advance step
+  return groupStandings;
 };
 
 export const getGroupStandings = () => ({ ...groupStandings });

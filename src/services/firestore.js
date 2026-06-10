@@ -26,6 +26,17 @@ import { db } from '../config/firebase.js';
 
 const COL = 'picks';
 
+// ── WARMUP ───────────────────────────────────────────────────
+// Called on app load to pre-establish the Firestore WebSocket connection.
+// This eliminates the 5-10 second cold start on the first real write.
+// It's a lightweight no-op read that just opens the connection.
+export const warmupFirestore = () => {
+  // Fire and forget — we don't care about the result
+  getDocs(collection(db, COL))
+    .then(() => console.log('[Firestore] Connection warmed up'))
+    .catch(() => {}); // silently ignore errors
+};
+
 // ── READ ──────────────────────────────────────────────────────
 
 export const loadAllPicks = async () => {
