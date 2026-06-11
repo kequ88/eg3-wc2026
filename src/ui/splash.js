@@ -204,7 +204,7 @@ export const renderRulesTab = () => {
           <ul style="margin-left:16px;margin-bottom:10px;line-height:1.8">
             <li>The 8 group winners drawn against a third-place team are awarded an <strong>automatic Walkover</strong> — they advance straight to the Round of 16 without a prediction needed.</li>
             <li>The 8 Round of 32 matches between second-place teams are <strong>fully playable</strong> — you pick the winner of each.</li>
-            <li><strong>No points are awarded or deducted for Round of 32 outcomes.</strong> Scoring activates from the Quarter-finals onwards.</li>
+            <li><strong>No points are awarded or deducted for Round of 32 outcomes.</strong></li>
           </ul>
           <p>This means everyone competes on equal footing, regardless of which third-place teams happened to qualify.</p>
         </div>
