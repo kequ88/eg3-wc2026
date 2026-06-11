@@ -20,7 +20,7 @@ export const GROUPS = Object.freeze({
   G: ['Belgium',       'Iran',         'New Zealand',    'Egypt'],
   H: ['Spain',         'Saudi Arabia', 'Uruguay',        'Cabo Verde'],
   I: ['France',        'Iraq',         'Norway',         'Senegal'],
-  J: ['Argentina',     'Jordan',       'Algeria',        'Ecuador'],
+  J: ['Argentina',     'Jordan',       'Algeria',        'Austria'],
   K: ['Portugal',      'Uzbekistan',   'Colombia',       'DR Congo'],
   L: ['England',       'Panama',       'Croatia',        'Ghana'],
 });
