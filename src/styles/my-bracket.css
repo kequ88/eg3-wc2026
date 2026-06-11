@@ -325,3 +325,32 @@
   background: var(--border);
   margin-bottom: -2px;
 }
+
+/* ── WINNER / LOSER TEAM ROWS ── */
+.bk-team-winner {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.bk-team-winner .bk-name {
+  font-weight: 700;
+}
+
+.bk-team-loser {
+  font-weight: 400;
+  opacity: 0.45;
+}
+
+/* VS divider between two teams */
+.bk-vs {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--muted);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  padding: 1px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin: 2px 0;
+}

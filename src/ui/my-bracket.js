@@ -70,7 +70,7 @@ export const renderMyBracket = () => {
       ${buildPodium(bp)}
       <div class="bracket-scroll-hint">← Scroll to explore your full bracket →</div>
       <div class="bracket-outer">
-        ${buildBracket(bp)}
+        ${buildBracket(bp, pick.groupStandings || {}, pick.r32picks || {})}
       </div>
     </div>`;
 };
@@ -108,7 +108,53 @@ const buildPodium = (bp) => {
 };
 
 // ── MAIN BRACKET ──────────────────────────────────────────────
-const buildBracket = (bp) => {
+const buildBracket = (bp, groupStandings, r32picks_raw) => {
+  // Resolve both teams for each R16 match
+  // Walkovers: team = groupStandings[group].first
+  // Clickable r32: team = r32picks_raw[matchId]
+  const wo = (group) => groupStandings[group]?.first || null;  // walkover team
+  const r32 = (id)   => r32picks_raw[id] || null;              // clickable r32 winner
+
+  // R16 participants (teamA, teamB per match)
+  const r16p = {
+    m89: [wo('E'),    wo('I')   ],  // 1E walkover vs 1I walkover
+    m90: [r32('m73'), r32('m75')],  // w73 vs w75
+    m91: [r32('m76'), r32('m78')],  // w76 vs w78
+    m92: [wo('A'),    wo('L')   ],  // 1A walkover vs 1L walkover
+    m93: [r32('m83'), r32('m84')],  // w83 vs w84
+    m94: [wo('D'),    wo('G')   ],  // 1D walkover vs 1G walkover
+    m95: [r32('m86'), r32('m88')],  // w86 vs w88
+    m96: [wo('B'),    wo('K')   ],  // 1B walkover vs 1K walkover
+  };
+
+  // QF participants come from R16 picks
+  const r16picks = bp.r16 || {};
+  const qfp = {
+    m97:  [r16picks['m89'], r16picks['m90']],
+    m99:  [r16picks['m91'], r16picks['m92']],
+    m98:  [r16picks['m93'], r16picks['m94']],
+    m100: [r16picks['m95'], r16picks['m96']],
+  };
+
+  // SF participants come from QF picks
+  const qfpicks = bp.qf || {};
+  const sfp = {
+    m101: [qfpicks['m97'],  qfpicks['m98'] ],
+    m102: [qfpicks['m99'],  qfpicks['m100']],
+  };
+
+  // Final participants come from SF picks
+  const sfpicks = bp.sf || {};
+  const finalTeams = [sfpicks['m101'], sfpicks['m102']];
+
+  // 3rd place participants = SF losers
+  const sf1 = sfpicks['m101'], sf2 = sfpicks['m102'];
+  const qf97=qfpicks['m97'], qf98=qfpicks['m98'];
+  const qf99=qfpicks['m99'], qf100=qfpicks['m100'];
+  const sfLoser1 = sf1 ? (sf1===qf97 ? qf98 : qf97) : null;
+  const sfLoser2 = sf2 ? (sf2===qf99 ? qf100 : qf99) : null;
+  const thirdTeams = [sfLoser1, sfLoser2];
+
   // Build from left (R16) → right (Final)
   // Layout: 4 rows of bracket pairs
   // Row 1: M89/M90 → M97 → M101 → M104
@@ -126,33 +172,6 @@ const buildBracket = (bp) => {
   const finalpick = bp.final?.['m104'] || null;
   const thirdpick = bp.third?.['m103'] || null;
 
-  // Helper: team chip
-  const chip = (team, isFinal=false, isThird=false) => {
-    if (!team) return `<div class="bk-team bk-team-tbd">Awaiting pick…</div>`;
-    const t = findTeam(team);
-    const cls = isFinal ? 'bk-team-final' : isThird ? 'bk-team-third' : '';
-    return `<div class="bk-team ${cls}">
-      <span class="bk-flag">${t?.f ?? '🏳'}</span>
-      <span class="bk-name">${team}</span>
-    </div>`;
-  };
-
-  // Helper: match box with two teams
-  const matchBox = (matchId, round, picks, isFinal=false, isThird=false, label='') => {
-    const team = picks[matchId] || null;
-    return `<div class="bk-match ${isFinal?'bk-match-final':''} ${isThird?'bk-match-third':''}">
-      ${label ? `<div class="bk-match-label">${label}</div>` : ''}
-      ${chip(team, isFinal, isThird)}
-    </div>`;
-  };
-
-  // SF losers for 3rd place context
-  const sf1 = sfpicks['m101'], sf2 = sfpicks['m102'];
-  const qf97=qfpicks['m97'], qf98=qfpicks['m98'];
-  const qf99=qfpicks['m99'], qf100=qfpicks['m100'];
-  const sfLoser1 = sf1 ? (sf1===qf97 ? qf98 : qf97) : null;
-  const sfLoser2 = sf2 ? (sf2===qf99 ? qf100 : qf99) : null;
-
   return `
   <div class="bk-bracket">
 
@@ -161,23 +180,23 @@ const buildBracket = (bp) => {
       <div class="bk-col-label">Round of 16</div>
 
       <div class="bk-group">
-        ${r16match(89,'m89',r16picks,'Sat 4 Jul · Philadelphia')}
-        ${r16match(90,'m90',r16picks,'Sat 4 Jul · Houston')}
+        ${r16match(89,'m89',r16picks,'Sat 4 Jul · Philadelphia', r16p.m89[0], r16p.m89[1])}
+        ${r16match(90,'m90',r16picks,'Sat 4 Jul · Houston',      r16p.m90[0], r16p.m90[1])}
       </div>
 
       <div class="bk-group">
-        ${r16match(91,'m91',r16picks,'Sun 5 Jul · New York NJ')}
-        ${r16match(92,'m92',r16picks,'Sun 5 Jul · Mexico City')}
+        ${r16match(91,'m91',r16picks,'Sun 5 Jul · New York NJ',  r16p.m91[0], r16p.m91[1])}
+        ${r16match(92,'m92',r16picks,'Sun 5 Jul · Mexico City',  r16p.m92[0], r16p.m92[1])}
       </div>
 
       <div class="bk-group">
-        ${r16match(93,'m93',r16picks,'Mon 6 Jul · Dallas')}
-        ${r16match(94,'m94',r16picks,'Mon 6 Jul · Seattle')}
+        ${r16match(93,'m93',r16picks,'Mon 6 Jul · Dallas',       r16p.m93[0], r16p.m93[1])}
+        ${r16match(94,'m94',r16picks,'Mon 6 Jul · Seattle',      r16p.m94[0], r16p.m94[1])}
       </div>
 
       <div class="bk-group">
-        ${r16match(95,'m95',r16picks,'Tue 7 Jul · Atlanta')}
-        ${r16match(96,'m96',r16picks,'Tue 7 Jul · Vancouver')}
+        ${r16match(95,'m95',r16picks,'Tue 7 Jul · Atlanta',      r16p.m95[0], r16p.m95[1])}
+        ${r16match(96,'m96',r16picks,'Tue 7 Jul · Vancouver',    r16p.m96[0], r16p.m96[1])}
       </div>
     </div>
 
@@ -186,16 +205,16 @@ const buildBracket = (bp) => {
       <div class="bk-col-label">Quarter-finals</div>
 
       <div class="bk-group bk-group-qf">
-        ${qfmatch(97,'m97',qfpicks,'Thu 9 Jul · Boston')}
+        ${qfmatch(97,'m97',qfpicks,'Thu 9 Jul · Boston',       qfp.m97[0],  qfp.m97[1])}
       </div>
       <div class="bk-group bk-group-qf">
-        ${qfmatch(99,'m99',qfpicks,'Sat 11 Jul · Miami')}
+        ${qfmatch(99,'m99',qfpicks,'Sat 11 Jul · Miami',       qfp.m99[0],  qfp.m99[1])}
       </div>
       <div class="bk-group bk-group-qf">
-        ${qfmatch(98,'m98',qfpicks,'Fri 10 Jul · Los Angeles')}
+        ${qfmatch(98,'m98',qfpicks,'Fri 10 Jul · Los Angeles', qfp.m98[0],  qfp.m98[1])}
       </div>
       <div class="bk-group bk-group-qf">
-        ${qfmatch(100,'m100',qfpicks,'Sat 11 Jul · Kansas City')}
+        ${qfmatch(100,'m100',qfpicks,'Sat 11 Jul · Kansas City',qfp.m100[0],qfp.m100[1])}
       </div>
     </div>
 
@@ -204,11 +223,11 @@ const buildBracket = (bp) => {
       <div class="bk-col-label">Semi-finals</div>
 
       <div class="bk-group bk-group-sf">
-        ${sfmatch(101,'m101',sfpicks,'Tue 14 Jul · Dallas')}
+        ${sfmatch(101,'m101',sfpicks,'Tue 14 Jul · Dallas',  sfp.m101[0], sfp.m101[1])}
       </div>
       <div class="bk-sf-spacer"></div>
       <div class="bk-group bk-group-sf">
-        ${sfmatch(102,'m102',sfpicks,'Wed 15 Jul · Atlanta')}
+        ${sfmatch(102,'m102',sfpicks,'Wed 15 Jul · Atlanta', sfp.m102[0], sfp.m102[1])}
       </div>
     </div>
 
@@ -220,58 +239,70 @@ const buildBracket = (bp) => {
       <div class="bk-third-block">
         <div class="bk-third-label">🥉 3rd Place Match</div>
         <div class="bk-third-info">Sat 18 Jul · Miami</div>
-        <div class="bk-match bk-match-third">
-          ${chip(thirdpick, false, true)}
-        </div>
+        ${teamRow(thirdTeams[0], thirdpick === thirdTeams[0])}
+        ${thirdTeams[0] && thirdTeams[1] ? vsDivider() : ''}
+        ${teamRow(thirdTeams[1], thirdpick === thirdTeams[1])}
       </div>
 
       <!-- Final -->
       <div class="bk-final-block">
         <div class="bk-final-label">🏆 The Final</div>
         <div class="bk-final-info">Sun 19 Jul · New York</div>
-        <div class="bk-match bk-match-final">
-          ${chip(finalpick, true, false)}
-        </div>
+        ${teamRow(finalTeams[0], finalpick === finalTeams[0])}
+        ${finalTeams[0] && finalTeams[1] ? vsDivider() : ''}
+        ${teamRow(finalTeams[1], finalpick === finalTeams[1])}
       </div>
     </div>
 
   </div>`;
 };
 
+// ── TEAM ROW ─────────────────────────────────────────────────
+// Renders a single team row. isWinner makes name bold.
+const teamRow = (team, isWinner) => {
+  if (!team) return `<div class="bk-team bk-team-tbd"><span class="bk-name">TBD</span></div>`;
+  const t = findTeam(team);
+  return `<div class="bk-team ${isWinner ? 'bk-team-winner' : 'bk-team-loser'}">
+    <span class="bk-flag">${t?.f ?? '🏳'}</span>
+    <span class="bk-name">${team}</span>
+  </div>`;
+};
+
+// Divider between two teams in a match
+const vsDivider = () => `<div class="bk-vs">vs</div>`;
+
 // ── MATCH BUILDERS ────────────────────────────────────────────
-const r16match = (num, id, picks, info) => {
-  const team = picks[id] || null;
-  const t    = team ? findTeam(team) : null;
+// Each match shows both teams, winner is bold, loser is dimmed.
+// teamA and teamB are the two participants.
+// picked is the user's chosen winner.
+
+const r16match = (num, id, picks, info, teamA, teamB) => {
+  const picked = picks[id] || null;
   return `<div class="bk-r16-match">
     <div class="bk-match-meta">M${num} · ${info}</div>
-    <div class="bk-team ${team ? '' : 'bk-team-tbd'}">
-      ${t ? `<span class="bk-flag">${t.f}</span><span class="bk-name">${team}</span>`
-          : '<span class="bk-name">Awaiting pick…</span>'}
-    </div>
+    ${teamRow(teamA, picked === teamA)}
+    ${teamA && teamB ? vsDivider() : ''}
+    ${teamRow(teamB, picked === teamB)}
   </div>`;
 };
 
-const qfmatch = (num, id, picks, info) => {
-  const team = picks[id] || null;
-  const t    = team ? findTeam(team) : null;
+const qfmatch = (num, id, picks, info, teamA, teamB) => {
+  const picked = picks[id] || null;
   return `<div class="bk-qf-match">
     <div class="bk-match-meta">M${num} · ${info}</div>
-    <div class="bk-team ${team ? '' : 'bk-team-tbd'}">
-      ${t ? `<span class="bk-flag">${t.f}</span><span class="bk-name">${team}</span>`
-          : '<span class="bk-name">Awaiting pick…</span>'}
-    </div>
+    ${teamRow(teamA, picked === teamA)}
+    ${teamA && teamB ? vsDivider() : ''}
+    ${teamRow(teamB, picked === teamB)}
   </div>`;
 };
 
-const sfmatch = (num, id, picks, info) => {
-  const team = picks[id] || null;
-  const t    = team ? findTeam(team) : null;
+const sfmatch = (num, id, picks, info, teamA, teamB) => {
+  const picked = picks[id] || null;
   return `<div class="bk-sf-match">
     <div class="bk-match-meta">M${num} · ${info}</div>
-    <div class="bk-team ${team ? '' : 'bk-team-tbd'}">
-      ${t ? `<span class="bk-flag">${t.f}</span><span class="bk-name">${team}</span>`
-          : '<span class="bk-name">Awaiting pick…</span>'}
-    </div>
+    ${teamRow(teamA, picked === teamA)}
+    ${teamA && teamB ? vsDivider() : ''}
+    ${teamRow(teamB, picked === teamB)}
   </div>`;
 };
 
