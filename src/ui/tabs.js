@@ -8,7 +8,8 @@ import { Analytics } from '../services/analytics.js';
 
 // ── DEADLINE ──────────────────────────────────────────────────
 // June 12 2026 01:00 MYT = June 11 17:00 UTC
-export const DEADLINE = new Date('2026-06-11T17:00:00Z');
+// June 12 2026 04:00 MYT = June 11 20:00 UTC (Mexico vs South Africa kickoff)
+export const DEADLINE = new Date('2026-06-11T20:00:00Z');
 export const isPastDeadline = () => new Date() >= DEADLINE;
 
 // Update the deadline banner text and colour.

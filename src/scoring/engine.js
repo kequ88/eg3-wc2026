@@ -1,248 +1,282 @@
-// src/scoring/engine.js — COMPLETE REWRITE for bracket-based scoring
+// src/scoring/engine.js — QF-anchored scoring system
 //
-// PURE FUNCTIONS ONLY. Zero DOM, zero Firebase, zero side effects.
-// Input: pick document + real match results → Output: points breakdown
+// The 8 QF picks are the anchor. Scoring works as follows:
 //
-// SCORING RULES:
-//   Phase 1 — Group stage (daily engagement)
-//     +3 per win for your picked 1st/2nd place teams
-//     +1 per draw for your picked 1st/2nd place teams
+// PARTICIPATION: +5 (just for submitting)
 //
-//   Phase 2 — Knockout bracket
-//     R32 skipped entirely (fair across all brackets)
-//     R16 reached:  +2 per correct team (max 16 teams × 2 = +32)
-//     QF reached:   +5 per correct team (max 8  teams × 5 = +40)
-//     SF reached:   +8 per correct team (max 4  teams × 8 = +32)
-//     Final reached:+12 per correct team (max 2 teams × 12 = +24)
-//     Winner:       +20 (once)
+// PHASE 1 — Group stage bonus (per QF pick):
+//   +3 per group win, +1 per group draw
 //
-//   Anti-troll penalties
-//     Picked winner exits group stage:   -5
-//     Picked finalist exits group stage: -4
+// PHASE 2 — Knockout (cumulative per correct team):
+//   QF reached:    +5  (max +40 across 8 teams)
+//   SF reached:    +8  (max +32 across 4 teams)
+//   Final reached: +12 (max +24 across 2 teams)
+//   Winner:        +20 (max +20)
+//   3rd place:     +8  (max +8)
+//   KO win bonus:  +5 per knockout win
 //
-//   Maximum possible: 292 pts (group bonuses + perfect bracket)
+// NEGATIVE (when a pick is eliminated before prediction):
+//   Role:         grp  r32  r16   qf   sf  final
+//   Picked as QF: [-3, -2,  -2,    0,   0,   0]
+//   Picked as SF: [-4, -3,  -3,   -2,   0,   0]
+//   Finalist:     [-5, -4,  -4,   -3,  -1,   0]
+//   Winner:       [-6, -5,  -5,   -4,  -2,  -1]
 
 import {
   R16_MATCHES, QF_MATCHES, SF_MATCHES, FINAL_MATCH,
-  computeR16Participants, computeQFParticipants,
-  computeSFParticipants, computeFinalParticipants,
 } from '../data/bracket.js';
 
-// Points per knockout stage
-const KO_PTS = Object.freeze({
-  r16:   2,
-  qf:    5,
-  sf:    8,
-  final: 12,
-  winner: 20,
+// ── STAGE RANK ────────────────────────────────────────────────
+const STAGE_RANK = {
+  'Group Stage':    0,
+  'Round of 32':    1,
+  'Round of 16':    2,
+  'Quarter-finals': 3,
+  'Semi-finals':    4,
+  'Final':          5,
+  'Winner':         6,
+  'Third':          5,
+};
+
+// ── NEGATIVE MATRIX ───────────────────────────────────────────
+// Columns: [grp, r32/r16, r16, qf, sf, final]
+const NEG = Object.freeze({
+  qf:     [-3, -2, -2,  0,  0,  0],
+  sf:     [-4, -3, -3, -2,  0,  0],
+  final:  [-5, -4, -4, -3, -1,  0],
+  winner: [-6, -5, -5, -4, -2, -1],
 });
 
-// ── GROUP STAGE SCORE ─────────────────────────────────────────
-// matchResults shape (from openfootball parser):
-//   { "Brazil": { groupWins:2, groupDraws:1, groupLosses:0, ... }, ... }
-//
-// pick.groupStandings shape:
-//   { A: { first:"Brazil", second:"Scotland" }, ... }
+const ELIM_IDX = {
+  'Group Stage':    0,
+  'Round of 32':    1,
+  'Round of 16':    2,
+  'Quarter-finals': 3,
+  'Semi-finals':    4,
+  'Final':          5,
+};
 
-export const calcGroupScore = (pick, matchResults) => {
-  if (!pick.groupStandings || !matchResults) return 0;
-  let pts = 0;
+// ── GET PICK ROLES ────────────────────────────────────────────
+// Returns the 8 QF picks with their roles (qf/sf/final/winner)
+// based on how deep the user predicted each team to go.
+export const getPickRoles = (pick) => {
+  const bp = pick.bracketPicks;
+  if (!bp) return [];
 
-  Object.values(pick.groupStandings).forEach(({ first, second }) => {
-    [first, second].forEach(team => {
-      if (!team) return;
-      const m = matchResults[team];
-      if (!m) return;
-      pts += (m.groupWins   || 0) * 3;
-      pts += (m.groupDraws  || 0) * 1;
-    });
+  // All 8 QF picks start as role 'qf'
+  const qfTeams = Object.values(bp.r16 || {}).filter(Boolean);
+  const roles   = qfTeams.map(team => ({ team, role: 'qf' }));
+
+  // Upgrade to 'sf' if in SF picks
+  const sfTeams = Object.values(bp.sf || {}).filter(Boolean);
+  // SF teams come from QF picks — upgrade role
+  Object.values(bp.qf || {}).filter(Boolean).forEach(team => {
+    if (sfTeams.includes(team)) {
+      const r = roles.find(x => x.team === team);
+      if (r) r.role = 'sf';
+    }
   });
 
+  // Upgrade to 'final' if in Final picks
+  const sf1 = bp.sf?.['m101'];
+  const sf2 = bp.sf?.['m102'];
+  [sf1, sf2].filter(Boolean).forEach(team => {
+    const r = roles.find(x => x.team === team);
+    if (r) r.role = 'final';
+  });
+
+  // Upgrade to 'winner' if picked as champion
+  const winner = bp.final?.['m104'];
+  if (winner) {
+    const r = roles.find(x => x.team === winner);
+    if (r) r.role = 'winner';
+  }
+
+  return roles;
+};
+
+// ── GROUP STAGE SCORE ─────────────────────────────────────────
+export const calcGroupScore = (pick, matchResults) => {
+  if (!pick.bracketPicks || !matchResults) return 0;
+  let pts = 0;
+  const qfTeams = Object.values(pick.bracketPicks.r16 || {}).filter(Boolean);
+  qfTeams.forEach(team => {
+    const m = matchResults[team];
+    if (!m) return;
+    pts += (m.groupWins  || 0) * 3;
+    pts += (m.groupDraws || 0) * 1;
+  });
+  return pts;
+};
+
+// ── KO WIN BONUS ─────────────────────────────────────────────
+const calcKOWinBonus = (pick, matchResults) => {
+  if (!pick.bracketPicks || !matchResults) return 0;
+  let pts = 0;
+  const qfTeams = Object.values(pick.bracketPicks.r16 || {}).filter(Boolean);
+  qfTeams.forEach(team => {
+    const m = matchResults[team];
+    if (!m) return;
+    pts += (m.koWins || 0) * 5;
+  });
   return pts;
 };
 
 // ── ANTI-TROLL PENALTY ────────────────────────────────────────
-// teamStatus shape: { "Brazil": { reachedStage:"Group Stage", eliminatedAt:"Group Stage" } }
-
 export const calcPenalty = (pick, teamStatus) => {
   if (!pick.bracketPicks || !teamStatus) return 0;
   let pts = 0;
+  const roles = getPickRoles(pick);
 
-  const winner  = pick.bracketPicks.final?.['m104'];
-  const finalists = Object.values(pick.bracketPicks.sf || {});
-
-  // Winner penalty
-  if (winner) {
-    const s = teamStatus[winner];
-    if (s?.eliminatedAt === 'Group Stage') pts -= 5;
-  }
-
-  // Finalist penalty (exclude winner to avoid double penalty)
-  finalists.forEach(team => {
-    if (!team || team === winner) return;
+  roles.forEach(({ team, role }) => {
     const s = teamStatus[team];
-    if (s?.eliminatedAt === 'Group Stage') pts -= 4;
+    if (!s?.eliminatedAt) return;
+    const elimIdx = ELIM_IDX[s.eliminatedAt];
+    if (elimIdx === undefined) return;
+    const predRank = { qf: 3, sf: 4, final: 5, winner: 6 }[role];
+    if (STAGE_RANK[s.eliminatedAt] < predRank) {
+      pts += NEG[role][elimIdx];
+    }
   });
 
   return pts;
 };
 
 // ── BRACKET SCORE ─────────────────────────────────────────────
-// Compares user's bracket picks against real team statuses.
-// teamStatus: { "Brazil": { reachedStage: "Semi-finals", eliminatedAt: "Semi-finals" } }
-
-const STAGE_RANK = {
-  'Group Stage': 0,
-  'Round of 32': 1,
-  'Round of 16': 2,
-  'Quarter-finals': 3,
-  'Semi-finals': 4,
-  'Final': 5,
-  'Winner': 6,
-  'Third': 5, // same rank as Final — reached the last 4
-};
-
 export const calcBracketScore = (pick, teamStatus) => {
   if (!pick.bracketPicks || !teamStatus) return 0;
   let pts = 0;
-  const bp = pick.bracketPicks;
+  const bp    = pick.bracketPicks;
+  const roles = getPickRoles(pick);
 
-  // R16 — +2 per team that actually reached R16
-  Object.values(bp.r16 || {}).forEach(team => {
-    if (!team) return;
+  // QF: +5 per team that actually reached QF
+  roles.forEach(({ team }) => {
     const rank = STAGE_RANK[teamStatus[team]?.reachedStage] ?? 0;
-    if (rank >= STAGE_RANK['Round of 16']) pts += KO_PTS.r16;
+    if (rank >= STAGE_RANK['Quarter-finals']) pts += 5;
   });
 
-  // QF — +5 per team that actually reached QF
-  Object.values(bp.qf || {}).forEach(team => {
-    if (!team) return;
+  // SF: +8 per team that actually reached SF
+  Object.values(bp.qf || {}).filter(Boolean).forEach(team => {
     const rank = STAGE_RANK[teamStatus[team]?.reachedStage] ?? 0;
-    if (rank >= STAGE_RANK['Quarter-finals']) pts += KO_PTS.qf;
+    if (rank >= STAGE_RANK['Semi-finals']) pts += 8;
   });
 
-  // SF — +8 per team that actually reached SF
-  Object.values(bp.sf || {}).forEach(team => {
-    if (!team) return;
+  // Final: +12 per team that actually reached Final
+  Object.values(bp.sf || {}).filter(Boolean).forEach(team => {
     const rank = STAGE_RANK[teamStatus[team]?.reachedStage] ?? 0;
-    if (rank >= STAGE_RANK['Semi-finals']) pts += KO_PTS.sf;
+    if (rank >= STAGE_RANK['Final']) pts += 12;
   });
 
-  // Final — +12 per finalist
-  Object.values(bp.final || {}).forEach(team => {
-    if (!team) return;
-    const rank = STAGE_RANK[teamStatus[team]?.reachedStage] ?? 0;
-    if (rank >= STAGE_RANK['Final']) pts += KO_PTS.final;
-  });
-
-  // Winner — +20
+  // Winner: +20
   const winner = bp.final?.['m104'];
-  if (winner && teamStatus[winner]?.reachedStage === 'Winner') {
-    pts += KO_PTS.winner;
-  }
+  if (winner && teamStatus[winner]?.reachedStage === 'Winner') pts += 20;
 
-  // 3rd place — +8 if team actually finished 3rd
+  // 3rd place: +8
   const third = bp.third?.['m103'];
-  if (third && teamStatus[third]?.reachedStage === 'Third') {
-    pts += 8;
-  }
+  if (third && teamStatus[third]?.reachedStage === 'Third') pts += 8;
 
   return pts;
 };
 
 // ── TOTAL SCORE ───────────────────────────────────────────────
 export const calcTotalScore = (pick, matchResults, teamStatus) => {
-  return (
-    calcGroupScore(pick, matchResults) +
-    calcBracketScore(pick, teamStatus) +
-    calcPenalty(pick, teamStatus)
-  );
+  return 5  // participation
+    + calcGroupScore(pick, matchResults)
+    + calcKOWinBonus(pick, matchResults)
+    + calcBracketScore(pick, teamStatus)
+    + calcPenalty(pick, teamStatus);
 };
 
-// ── PER-ROUND BREAKDOWN ───────────────────────────────────────
-// Returns array of { round, pts, detail } for the profile page.
+// ── SCORE BREAKDOWN (for profile page) ───────────────────────
 export const buildScoreBreakdown = (pick, matchResults, teamStatus) => {
   const rows = [];
+  const bp   = pick.bracketPicks || {};
+
+  // Participation
+  rows.push({ round: 'Participation', pts: 5, detail: [] });
 
   // Group stage
-  const gPts = calcGroupScore(pick, matchResults);
-  if (matchResults && Object.keys(matchResults).length > 0) {
+  if (matchResults && Object.keys(matchResults).length) {
+    const qfTeams = Object.values(bp.r16 || {}).filter(Boolean);
+    let gPts = 0;
     const detail = [];
-    Object.entries(pick.groupStandings || {}).forEach(([grp, { first, second }]) => {
-      [first, second].forEach(team => {
-        if (!team) return;
-        const m = matchResults[team];
-        if (!m) return;
-        const pts = (m.groupWins || 0) * 3 + (m.groupDraws || 0);
-        if (pts !== 0) detail.push({ team, pts, note: `${m.groupWins}W ${m.groupDraws}D` });
-      });
+    qfTeams.forEach(team => {
+      const m = matchResults[team];
+      if (!m) return;
+      const pts = (m.groupWins || 0) * 3 + (m.groupDraws || 0);
+      if (pts) { detail.push({ team, pts, note: `${m.groupWins}W ${m.groupDraws}D` }); }
+      gPts += pts;
     });
-    rows.push({ round: 'Group Stage', pts: gPts, detail });
+    rows.push({ round: 'Group Stage Bonus', pts: gPts, detail });
   }
 
-  // Bracket rounds
-  const bp = pick.bracketPicks || {};
-  const rounds = [
-    { key: 'r16',   label: 'Round of 16',    pts: KO_PTS.r16,   stageReq: 'Round of 16'    },
-    { key: 'qf',    label: 'Quarter-finals',  pts: KO_PTS.qf,    stageReq: 'Quarter-finals'  },
-    { key: 'sf',    label: 'Semi-finals',     pts: KO_PTS.sf,    stageReq: 'Semi-finals'     },
-    { key: 'final', label: 'Final',           pts: KO_PTS.final, stageReq: 'Final'           },
-  ];
-
-  rounds.forEach(({ key, label, pts: ptsEach, stageReq }) => {
-    const teams = Object.values(bp[key] || {}).filter(Boolean);
-    if (!teams.length) return;
-    let roundPts = 0;
-    const detail = [];
-    teams.forEach(team => {
-      const rank = STAGE_RANK[teamStatus?.[team]?.reachedStage] ?? 0;
-      const earned = rank >= STAGE_RANK[stageReq] ? ptsEach : 0;
-      roundPts += earned;
-      detail.push({ team, pts: earned });
+  // QF
+  if (teamStatus) {
+    const roles = getPickRoles(pick);
+    let qfPts = 0;
+    const qfDetail = [];
+    roles.forEach(({ team }) => {
+      const rank = STAGE_RANK[teamStatus[team]?.reachedStage] ?? 0;
+      const pts  = rank >= STAGE_RANK['Quarter-finals'] ? 5 : 0;
+      qfPts += pts;
+      qfDetail.push({ team, pts });
     });
-    rows.push({ round: label, pts: roundPts, detail });
-  });
+    rows.push({ round: 'Quarter-finals', pts: qfPts, detail: qfDetail });
 
-  // 3rd place bonus
-  const third = bp.third?.['m103'];
-  if (third && teamStatus) {
-    const isThird = teamStatus[third]?.reachedStage === 'Third';
-    rows.push({
-      round: '3rd Place Match',
-      pts: isThird ? 8 : 0,
-      detail: [{ team: third, pts: isThird ? 8 : 0 }],
+    // SF
+    let sfPts = 0;
+    const sfDetail = [];
+    Object.values(bp.qf || {}).filter(Boolean).forEach(team => {
+      const rank = STAGE_RANK[teamStatus[team]?.reachedStage] ?? 0;
+      const pts  = rank >= STAGE_RANK['Semi-finals'] ? 8 : 0;
+      sfPts += pts;
+      sfDetail.push({ team, pts });
     });
-  }
+    rows.push({ round: 'Semi-finals', pts: sfPts, detail: sfDetail });
 
-  // Winner bonus
-  const winner = bp.final?.['m104'];
-  if (winner && teamStatus) {
-    const isChamp = teamStatus[winner]?.reachedStage === 'Winner';
-    rows.push({
-      round: 'Winner',
-      pts: isChamp ? KO_PTS.winner : 0,
-      detail: [{ team: winner, pts: isChamp ? KO_PTS.winner : 0 }],
+    // Final
+    let fPts = 0;
+    const fDetail = [];
+    Object.values(bp.sf || {}).filter(Boolean).forEach(team => {
+      const rank = STAGE_RANK[teamStatus[team]?.reachedStage] ?? 0;
+      const pts  = rank >= STAGE_RANK['Final'] ? 12 : 0;
+      fPts += pts;
+      fDetail.push({ team, pts });
     });
-  }
+    rows.push({ round: 'Final', pts: fPts, detail: fDetail });
 
-  // Penalties
-  const pen = calcPenalty(pick, teamStatus);
-  if (pen !== 0) {
-    rows.push({ round: 'Penalties', pts: pen, detail: [] });
+    // Winner
+    const winner = bp.final?.['m104'];
+    if (winner) {
+      const pts = teamStatus[winner]?.reachedStage === 'Winner' ? 20 : 0;
+      rows.push({ round: 'Champion', pts, detail: [{ team: winner, pts }] });
+    }
+
+    // 3rd place
+    const third = bp.third?.['m103'];
+    if (third) {
+      const pts = teamStatus[third]?.reachedStage === 'Third' ? 8 : 0;
+      rows.push({ round: '3rd Place', pts, detail: [{ team: third, pts }] });
+    }
+
+    // KO win bonus
+    if (matchResults) {
+      const kwPts = calcKOWinBonus(pick, matchResults);
+      if (kwPts) rows.push({ round: 'KO Win Bonuses', pts: kwPts, detail: [] });
+    }
+
+    // Penalties
+    const pen = calcPenalty(pick, teamStatus);
+    if (pen) rows.push({ round: 'Penalties', pts: pen, detail: [] });
   }
 
   return rows;
 };
 
 // ── COMPLETION CHECK ─────────────────────────────────────────
-// Returns true if pick has all required fields filled.
 export const isPickComplete = (pick) => {
   if (!pick?.groupStandings) return false;
-  const groups = Object.keys(pick.groupStandings);
-  if (groups.length < 12) return false;
-  for (const g of groups) {
-    if (!pick.groupStandings[g]?.first || !pick.groupStandings[g]?.second) return false;
-  }
+  if (Object.keys(pick.groupStandings).length < 12) return false;
   if (!pick.r32picks || Object.keys(pick.r32picks).length < 8) return false;
   if (!pick.bracketPicks?.final?.['m104']) return false;
   return true;
