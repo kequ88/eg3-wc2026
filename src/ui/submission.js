@@ -351,8 +351,13 @@ const renderSuccessScreen = (draft) => {
     </div>`;
 
   // Auto-redirect to leaderboard after 3 seconds
+  // Use direct DOM manipulation to ensure tab switch works
+  // even if App namespace isn't fully ready
   setTimeout(() => {
-    if (typeof App !== 'undefined') App.switchTab('board');
+    // Click the leaderboard tab button directly — most reliable approach
+    const boardTab = document.querySelector('[data-tab="board"]');
+    if (boardTab) boardTab.click();
+    else if (typeof App !== 'undefined') App.switchTab('board');
   }, 3000);
 };
 

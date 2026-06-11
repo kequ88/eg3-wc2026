@@ -1,199 +1,327 @@
 /* src/styles/my-bracket.css
- * Styles for the My Bracket personal visualization tab
+ * Proper knockout bracket with connecting lines
+ * Layout: R16 (4 groups of 2) → QF (4) → SF (2) → Final
+ * 3rd place sits above Final, disconnected from main lines
  */
 
 /* ── WRAP ── */
-.mybracket-wrap {
-  padding-bottom: 2rem;
-}
+.mybracket-wrap { padding-bottom: 2rem; }
 
-.mybracket-header {
-  margin-bottom: 1.25rem;
-}
-
+.mybracket-header { margin-bottom: 1rem; }
 .mybracket-title {
   font-family: var(--font-display);
   font-size: clamp(20px, 5vw, 28px);
   letter-spacing: 1px;
   color: var(--text);
 }
-
-.mybracket-sub {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 3px;
-}
+.mybracket-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
 
 /* ── PODIUM ── */
 .mybracket-podium {
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 1.5rem;
-  padding: 1.25rem 0.5rem 0;
+  padding: 1rem 0.5rem 0;
   background: linear-gradient(135deg, var(--green-dark), var(--green));
   border-radius: var(--radius);
   flex-wrap: wrap;
 }
-
 .podium-slot {
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 0.75rem 0.5rem 1rem;
   border-radius: var(--radius) var(--radius) 0 0;
-  min-width: 72px;
+  min-width: 68px;
   text-align: center;
 }
-
-.podium-1st {
-  background: rgba(201,168,76,.25);
-  border: 1px solid var(--gold);
-  order: 3;
-  padding-top: 1.25rem;
-}
-
-.podium-2nd {
-  background: rgba(255,255,255,.1);
-  order: 2;
-}
-
-.podium-3rd {
-  background: rgba(255,255,255,.07);
-  order: 1;
-}
-
-.podium-4th {
-  background: rgba(255,255,255,.05);
-  order: 0;
-}
-
-.podium-trophy {
-  font-size: 24px;
-  margin-bottom: 4px;
-}
-
+.podium-1st { background: rgba(201,168,76,.25); border: 1px solid var(--gold); order:3; padding-top:1.25rem; }
+.podium-2nd { background: rgba(255,255,255,.1);  order:2; }
+.podium-3rd { background: rgba(255,255,255,.07); order:1; }
+.podium-4th { background: rgba(255,255,255,.04); order:0; }
+.podium-trophy { font-size: 22px; margin-bottom: 4px; }
 .podium-flag {
-  font-size: 28px;
-  line-height: 1;
+  font-size: 28px; line-height: 1;
   font-family: "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif;
 }
+.podium-name  { font-size: 11px; font-weight: 600; color: #fff; margin-top: 5px; max-width: 68px; word-break: break-word; line-height: 1.2; }
+.podium-label { font-size: 10px; color: rgba(255,255,255,.65); margin-top: 3px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
 
-.podium-flag-lg { font-size: 40px; }
-
-.podium-name {
+/* ── SCROLL HINT ── */
+.bracket-scroll-hint {
   font-size: 11px;
-  font-weight: 600;
-  color: #fff;
-  margin-top: 5px;
-  max-width: 70px;
-  word-break: break-word;
+  color: var(--muted);
   text-align: center;
-  line-height: 1.2;
+  margin-bottom: 8px;
 }
 
-.podium-name-lg { font-size: 13px; }
-
-.podium-label {
-  font-size: 10px;
-  color: rgba(255,255,255,.65);
-  margin-top: 3px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .4px;
-}
-
-/* ── BRACKET TREE ── */
-.bracket-tree {
+/* ── OUTER SCROLL WRAPPER ── */
+.bracket-outer {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 8px;
+  padding-bottom: 1rem;
+  scrollbar-width: thin;
 }
 
-.bracket-tree-inner {
+/* ── MAIN BRACKET GRID ── */
+.bk-bracket {
   display: flex;
   gap: 0;
-  min-width: 580px;
-  align-items: center;
+  min-width: 700px;
+  align-items: stretch;
 }
 
-.bt-round {
-  flex: 1;
+/* ── COLUMNS ── */
+.bk-col {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 0 4px;
+  position: relative;
 }
 
-.bt-round-label {
+.bk-col-label {
   font-size: 10px;
   font-weight: 700;
   color: var(--muted);
   text-transform: uppercase;
-  letter-spacing: .5px;
-  margin-bottom: 4px;
+  letter-spacing: .6px;
   text-align: center;
-  padding: 4px 0;
+  padding: 6px 8px;
   border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
-/* R16 has 8 slots, QF has 4, SF has 2, Final has 1 */
-/* We use flex gap and padding to visually align rounds */
-.bt-r16  { gap: 4px; }
-.bt-qf   { gap: 20px;  padding-top: 12px; }
-.bt-sf   { gap: 56px;  padding-top: 28px; }
-.bt-final{ gap: 8px;   padding-top: 0; }
+.bk-col-r16  { flex: 0 0 190px; }
+.bk-col-qf   { flex: 0 0 170px; }
+.bk-col-sf   { flex: 0 0 160px; }
+.bk-col-final{ flex: 0 0 170px; }
 
-/* ── MATCH CARD ── */
-.bt-match {
+/* ── R16 GROUPS (pairs of 2 matches) ── */
+.bk-group {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 8px;
+  flex-direction: column;
+  flex: 1;
+  padding: 0 8px;
+  position: relative;
+}
+
+/* Right connector line from R16 group → QF */
+.bk-col-r16 .bk-group::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: 25%;
+  bottom: 25%;
+  width: 12px;
+  border-top: 2px solid var(--border);
+  border-right: 2px solid var(--border);
+  border-bottom: 2px solid var(--border);
+  border-left: none;
+  border-radius: 0 4px 4px 0;
+}
+
+/* QF groups */
+.bk-group-qf {
+  flex: 1;
+  padding: 0 8px;
+  justify-content: center;
+  position: relative;
+}
+
+/* Left connector line from QF ← R16 */
+.bk-col-qf .bk-group-qf::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  width: 12px;
+  height: 2px;
+  background: var(--border);
+}
+
+/* Right connector line from QF → SF */
+.bk-col-qf .bk-group-qf:nth-child(odd)::after,
+.bk-col-qf .bk-group-qf:nth-child(even)::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  width: 12px;
+  border-right: 2px solid var(--border);
+  border-left: none;
+}
+.bk-col-qf .bk-group-qf:nth-child(2)::after {
+  top: 50%; bottom: -50%;
+  border-top: 2px solid var(--border);
+  border-bottom: none;
+  border-radius: 0 4px 0 0;
+}
+.bk-col-qf .bk-group-qf:nth-child(3)::after {
+  bottom: 50%; top: -50%;
+  border-bottom: 2px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 4px 0;
+}
+.bk-col-qf .bk-group-qf:nth-child(5)::after {
+  top: 50%; bottom: -50%;
+  border-top: 2px solid var(--border);
+  border-bottom: none;
+  border-radius: 0 4px 0 0;
+}
+.bk-col-qf .bk-group-qf:nth-child(6)::after {
+  bottom: 50%; top: -50%;
+  border-bottom: 2px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 4px 0;
+}
+
+/* SF groups */
+.bk-group-sf {
+  flex: 1;
+  padding: 0 8px;
+  justify-content: center;
+  position: relative;
+}
+
+/* Left connector from SF ← QF */
+.bk-group-sf::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  width: 12px;
+  height: 2px;
+  background: var(--border);
+}
+
+/* Right connector from SF → Final */
+.bk-group-sf:first-child::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: 50%;
+  bottom: -60%;
+  width: 12px;
+  border-top: 2px solid var(--border);
+  border-right: 2px solid var(--border);
+  border-radius: 0 4px 0 0;
+}
+.bk-group-sf:last-child::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  bottom: 50%;
+  top: -60%;
+  width: 12px;
+  border-bottom: 2px solid var(--border);
+  border-right: 2px solid var(--border);
+  border-radius: 0 0 4px 0;
+}
+
+/* SF spacer between top and bottom halves */
+.bk-sf-spacer { flex: 0 0 40px; }
+
+/* ── MATCH CARDS ── */
+.bk-r16-match,
+.bk-qf-match,
+.bk-sf-match {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 7px;
+  padding: 6px 8px;
+  margin: 3px 0;
+  flex: 1;
+}
+
+.bk-match-meta {
+  font-size: 9px;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+  margin-bottom: 4px;
+}
+
+/* ── TEAM CHIP ── */
+.bk-team {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 12px;
   color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  transition: border-color .15s;
+  font-weight: 500;
 }
-
-.bt-match-empty {
-  background: var(--bg);
-  color: var(--muted);
-  font-style: italic;
-  justify-content: center;
-}
-
-.bt-match-final {
-  background: var(--gold-light);
-  border-color: var(--gold);
-  font-weight: 700;
-  font-size: 13px;
-}
-
-.bt-match-third {
-  background: #FFF5EC;
-  border-color: #D2691E;
-}
-
-.bt-flag {
+.bk-team-tbd { color: var(--muted); font-style: italic; font-weight: 400; }
+.bk-team-final { font-weight: 700; font-size: 13px; }
+.bk-team-third { color: #8B4513; }
+.bk-flag {
   font-size: 16px;
   flex-shrink: 0;
   font-family: "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif;
 }
+.bk-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.bt-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  flex: 1;
+/* ── FINAL COLUMN ── */
+.bk-col-final {
+  padding: 0 8px;
+  justify-content: center;
 }
 
-/* Connector lines between rounds using CSS borders */
-.bt-qf   .bt-match { margin: 8px 0; }
-.bt-sf   .bt-match { margin: 22px 0; }
-.bt-final .bt-match { margin: 4px 0; }
+/* 3rd place block — sits above Final, no connecting lines */
+.bk-third-block {
+  margin-bottom: 16px;
+  padding: 10px 8px;
+  background: #FFF5EC;
+  border: 1px dashed #D2691E;
+  border-radius: var(--radius);
+}
+.bk-third-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #8B4513;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  margin-bottom: 2px;
+}
+.bk-third-info {
+  font-size: 10px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+/* Final block */
+.bk-final-block {
+  padding: 10px 8px;
+  background: var(--gold-light);
+  border: 2px solid var(--gold);
+  border-radius: var(--radius);
+}
+.bk-final-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #7a5c00;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  margin-bottom: 2px;
+}
+.bk-final-info {
+  font-size: 10px;
+  color: #7a5c00;
+  margin-bottom: 6px;
+}
+
+/* Left connector into Final from SF */
+.bk-final-block::before {
+  content: '';
+  display: block;
+  position: relative;
+  left: -20px;
+  width: 12px;
+  height: 2px;
+  background: var(--border);
+  margin-bottom: -2px;
+}
