@@ -265,6 +265,7 @@ const goToStep = (step, draft = null) => {
 export const groupsNextStep = () => {
   const standings = groupsNext(); // non-blocking now
   if (!standings) return;
+  window.scrollTo(0, 0);
   goToStep('r32');
 };
 
@@ -275,6 +276,7 @@ export const r32Back = () => { window.scrollTo(0, 0); goToStep('groups'); };
 export const r32NextStep = () => {
   const r32p = r32Next(); // non-blocking now
   if (!r32p) return;
+  window.scrollTo(0, 0);
   goToStep('bracket');
 };
 
@@ -288,13 +290,17 @@ export const bracketBack = () => {
 export const bracketSubmitStep = async () => {
   const ok = await bracketSubmit();
   if (ok) {
-    const standings = getGroupStandings();
-    const r32p      = getR32Picks();
-    const bp        = getBracketPicks();
+    window.scrollTo(0, 0);
+    const bp = getBracketPicks();
+    // userName may be null on resubmit — fall back to stored name
+    const allPicks  = (await import('./leaderboard.js')).getCachedPicks();
+    const myHouse   = localStorage.getItem('eg3_my_house');
+    const stored    = allPicks.find(p => p.houseId === myHouse);
+    const nameToUse = userName || stored?.name || 'Neighbour';
     goToStep('done', {
-      name:          userName,
-      groupStandings: standings,
-      r32picks:       r32p,
+      name:           nameToUse,
+      groupStandings: getGroupStandings(),
+      r32picks:       getR32Picks(),
       bracketPicks:   bp,
     });
   }
@@ -306,6 +312,9 @@ const renderSuccessScreen = (draft) => {
   if (!el) return;
 
   const winner = draft?.bracketPicks?.final?.['m104'] || '—';
+  const wTeam  = winner !== '—'
+    ? (window.__eg3Teams || []).find(t => t.n === winner)
+    : null;
 
   el.innerHTML = `
     <div class="success-screen">
@@ -313,18 +322,18 @@ const renderSuccessScreen = (draft) => {
       <div class="success-title">You're in, ${draft?.name || 'Neighbour'}!</div>
       <div class="success-sub">
         Your predictions are saved!<br>
-        Changed your mind? You can resubmit anytime before June 12, 12:30 AM MYT.<br>
-        The leaderboard goes fully live when the tournament starts.
+        Changed your mind? You can resubmit anytime before <strong>June 12, 4:00 AM MYT</strong>.<br>
+        Redirecting to leaderboard in a moment…
       </div>
 
       <div class="success-picks">
         <div class="success-pick-row">
-          <span class="success-pick-label">Your World Cup Winner</span>
-          <strong>${winner}</strong>
+          <span class="success-pick-label">🏆 Your World Cup Winner</span>
+          <strong>${wTeam ? wTeam.f + ' ' : ''}${winner}</strong>
         </div>
         <div class="success-pick-row">
-          <span class="success-pick-label">Submission deadline</span>
-          <span>June 12, 12:30 AM MYT</span>
+          <span class="success-pick-label">⏰ Submission deadline</span>
+          <span>June 12, 4:00 AM MYT</span>
         </div>
       </div>
 
@@ -340,6 +349,11 @@ const renderSuccessScreen = (draft) => {
         </button>
       </div>
     </div>`;
+
+  // Auto-redirect to leaderboard after 3 seconds
+  setTimeout(() => {
+    if (typeof App !== 'undefined') App.switchTab('board');
+  }, 3000);
 };
 
 // ── HELPERS ───────────────────────────────────────────────────
