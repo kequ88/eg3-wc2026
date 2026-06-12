@@ -25,7 +25,7 @@
 
 const FD_URL =
   'https://api.football-data.org/v4/competitions/WC/matches';
-const PROXY_URL = 'https://corsproxy.io/?';  
+// const PROXY_URL = 'https://corsproxy.io/?';  
 
 // Stage names — must match exactly what the scoring engine expects.
 export const STAGES = Object.freeze([
@@ -192,7 +192,8 @@ export const parseFootballData = (data) => {
 // Returns the parsed result, or empty defaults on failure.
 export const fetchMatchData = async () => {
   try {
-    const res = await fetch(`${PROXY_URL}${encodeURIComponent(FD_URL)}`, {
+    // const res = await fetch(`${PROXY_URL}${encodeURIComponent(FD_URL)}`, {
+    const res = await fetch(FD_URL, {
       headers: {
         'X-Auth-Token': import.meta.env.VITE_FOOTBALL_DATA_TOKEN,
       },
