@@ -23,8 +23,9 @@
 //     }
 //   }
 
-const OFB_URL =
-  'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json';
+const FD_URL =
+  'https://api.football-data.org/v4/competitions/WC/matches';
+const PROXY_URL = 'https://corsproxy.io/?';  
 
 // Stage names — must match exactly what the scoring engine expects.
 export const STAGES = Object.freeze([
@@ -39,17 +40,30 @@ export const STAGES = Object.freeze([
 
 export const STAGE_IDX = Object.fromEntries(STAGES.map((s, i) => [s, i]));
 
-// Map openfootball round strings to our stage names.
-const roundToStage = (round = '') => {
-  const r = round.toLowerCase();
-  if (r.includes('matchday') || r.includes('group')) return 'Group Stage';
-  if (r.includes('round of 32') || r.includes('r32'))  return 'Round of 32';
-  if (r.includes('round of 16') || r.includes('r16'))  return 'Round of 16';
-  if (r.includes('quarter'))  return 'Quarter-finals';
-  if (r.includes('semi'))     return 'Semi-finals';
-  if (r.includes('final') && !r.includes('semi') && !r.includes('third'))
-    return 'Final';
-  return null;
+// Map football-data.org stage strings to our stage names.
+const stageToStage = (stage = '') => {
+  switch (stage) {
+    case 'GROUP_STAGE':
+      return 'Group Stage';
+
+    case 'LAST_32':
+      return 'Round of 32';
+
+    case 'LAST_16':
+      return 'Round of 16';
+
+    case 'QUARTER_FINALS':
+      return 'Quarter-finals';
+
+    case 'SEMI_FINALS':
+      return 'Semi-finals';
+
+    case 'FINAL':
+      return 'Final';
+
+    default:
+      return null;
+  }
 };
 
 // Initialise a blank stats record for a team.
@@ -67,16 +81,35 @@ const blankStatus = () => ({
 // Determine the KO winner from a match object.
 // Openfootball uses: score.ft (full time), score.et (extra time), score.p (penalties)
 const koWinner = (m, t1, t2) => {
-  const [s1, s2] = m.score.ft;
-  if (m.score.et) {
-    const [e1, e2] = m.score.et;
-    return e1 > e2 ? [t1, t2] : [t2, t1]; // [winner, loser]
+  const et = m.score?.extraTime;
+
+  if (
+    et &&
+    et.home !== null &&
+    et.away !== null
+  ) {
+    return et.home > et.away
+      ? [t1, t2]
+      : [t2, t1];
   }
-  if (m.score.p) {
-    const [p1, p2] = m.score.p;
-    return p1 > p2 ? [t1, t2] : [t2, t1];
+
+  const pens = m.score?.penalties;
+
+  if (
+    pens &&
+    pens.home !== null &&
+    pens.away !== null
+  ) {
+    return pens.home > pens.away
+      ? [t1, t2]
+      : [t2, t1];
   }
-  return s1 > s2 ? [t1, t2] : [t2, t1];
+
+  const ft = m.score?.fullTime;
+
+  return ft.home > ft.away
+    ? [t1, t2]
+    : [t2, t1];
 };
 
 // Next stage a team advances to after winning a KO round.
@@ -88,7 +121,7 @@ const nextStage = {
   'Final':        'Winner',
 };
 
-export const parseOFB = (data) => {
+export const parseFootballData = (data) => {
   const mdata      = {}; // team → aggregate stats
   const status     = {}; // team → { reachedStage, eliminatedAt }
   const roundSnaps = {}; // stage → { team → per-round stats }
@@ -106,12 +139,16 @@ export const parseOFB = (data) => {
 
   for (const m of (data.matches || [])) {
     // Skip unplayed matches — no score yet
-    if (!m.score?.ft) continue;
+    if (m.status !== 'FINISHED' &&
+        m.status !== 'AWARDED'
+        ) continue;
+      const t1 = m.homeTeam?.name;
+      const t2 = m.awayTeam?.name;
 
-    const t1    = m.team1;
-    const t2    = m.team2;
-    const [s1, s2] = m.score.ft;
-    const stage = roundToStage(m.round || '');
+      const s1 = m.score?.fullTime?.home;
+      const s2 = m.score?.fullTime?.away;
+
+      const stage = stageToStage(m.stage);
     if (!stage) continue;
 
     initTeam(t1); initTeam(t2);
@@ -151,16 +188,33 @@ export const parseOFB = (data) => {
   return { mdata, status, roundSnaps };
 };
 
-// Fetch from openfootball and parse.
+// Fetch from football-data.org and parse.
 // Returns the parsed result, or empty defaults on failure.
 export const fetchMatchData = async () => {
   try {
-    const res  = await fetch(OFB_URL);
+    const res = await fetch(`${PROXY_URL}${encodeURIComponent(FD_URL)}`, {
+      headers: {
+        'X-Auth-Token': import.meta.env.VITE_FOOTBALL_DATA_TOKEN,
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
     const data = await res.json();
-    return parseOFB(data);
+
+    console.log(data.matches[0]);
+
+    return parseFootballData(data);
   } catch (err) {
-    console.warn('[OFB] Fetch failed — tournament may not have started yet:', err.message);
-    return { mdata: {}, status: {}, roundSnaps: {} };
+    console.warn('[FootballData] Fetch failed:', err.message);
+
+    return {
+      mdata: {},
+      status: {},
+      roundSnaps: {},
+    };
   }
 };
 
