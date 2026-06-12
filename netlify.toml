@@ -11,6 +11,9 @@
   # Vite outputs to /dist — must match vite.config.js outDir
   publish = "dist"
 
+  # Netlify serverless function as backend proxy
+  functions = "netlify/functions"
+
 # Redirect rule — important for single-page apps (SPA)
 # Without this, if someone refreshes on any page, they get a 404.
 # This tells Netlify: "for any URL, always serve index.html"

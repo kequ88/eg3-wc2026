@@ -24,3 +24,6 @@ node_modules/
 Thumbs.db
 .vscode/settings.json
 *.log
+
+# Local Netlify folder
+.netlify

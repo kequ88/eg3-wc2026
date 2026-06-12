@@ -1,31 +1,9 @@
 // src/services/openfootball.js
 //
-// Responsible for fetching live match data from openfootball's
+// Responsible for fetching live match data from football-data.org's
 // community-maintained JSON feed and parsing it into a shape
 // the scoring engine can work with.
 //
-// WHY ISOLATE THIS?
-//   If openfootball changes their JSON structure, or you switch
-//   to a paid API (API-Football, Sportmonks), only this file changes.
-//   The scoring engine only ever sees the normalised output format below.
-//
-// OUTPUT FORMAT:
-//   {
-//     mdata: {
-//       "Brazil": { groupWins, groupDraws, groupLosses, koWins, koLosses }
-//     },
-//     status: {
-//       "Brazil": { reachedStage: "Semi-finals", eliminatedAt: null }
-//     },
-//     roundSnaps: {
-//       "Group Stage": { "Brazil": { w, d, l, koW, koL } },
-//       "Quarter-finals": { ... }
-//     }
-//   }
-
-const FD_URL =
-  'https://api.football-data.org/v4/competitions/WC/matches';
-// const PROXY_URL = 'https://corsproxy.io/?';  
 
 // Stage names — must match exactly what the scoring engine expects.
 export const STAGES = Object.freeze([
@@ -193,11 +171,7 @@ export const parseFootballData = (data) => {
 export const fetchMatchData = async () => {
   try {
     // const res = await fetch(`${PROXY_URL}${encodeURIComponent(FD_URL)}`, {
-    const res = await fetch(FD_URL, {
-      headers: {
-        'X-Auth-Token': import.meta.env.VITE_FOOTBALL_DATA_TOKEN,
-      },
-    });
+    const res = await fetch('/api/matches');
 
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}`);
