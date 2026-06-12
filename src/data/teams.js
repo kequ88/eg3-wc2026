@@ -28,7 +28,7 @@ export const TEAMS = Object.freeze([
   // ── UEFA (16) ────────────────────────────────────────────────
   { n: 'Austria',            f: '🇦🇹', conf: 'UEFA' },
   { n: 'Belgium',            f: '🇧🇪', conf: 'UEFA' },
-  { n: 'Bosnia & Herzegovina', f: '🇧🇦', conf: 'UEFA' },
+  { n: 'Bosnia-Herzegovina', f: '🇧🇦', conf: 'UEFA' },
   { n: 'Croatia',            f: '🇭🇷', conf: 'UEFA' },
   { n: 'Czechia',            f: '🇨🇿', conf: 'UEFA' },
   { n: 'England',            f: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', conf: 'UEFA' },
@@ -41,7 +41,7 @@ export const TEAMS = Object.freeze([
   { n: 'Spain',              f: '🇪🇸', conf: 'UEFA' },
   { n: 'Sweden',             f: '🇸🇪', conf: 'UEFA' },
   { n: 'Switzerland',        f: '🇨🇭', conf: 'UEFA' },
-  { n: 'Türkiye',            f: '🇹🇷', conf: 'UEFA' },
+  { n: 'Turkey',            f: '🇹🇷', conf: 'UEFA' },
 
   // ── AFC (9) ──────────────────────────────────────────────────
   { n: 'Australia',          f: '🇦🇺', conf: 'AFC' },
@@ -56,9 +56,9 @@ export const TEAMS = Object.freeze([
 
   // ── CAF (10) ─────────────────────────────────────────────────
   { n: 'Algeria',            f: '🇩🇿', conf: 'CAF' },
-  { n: 'Cape Verde',         f: '🇨🇻', conf: 'CAF' },
-  { n: "Côte d'Ivoire",      f: '🇨🇮', conf: 'CAF' },
-  { n: 'DR Congo',           f: '🇨🇩', conf: 'CAF' },
+  { n: 'Cape Verde Islands', f: '🇨🇻', conf: 'CAF' },
+  { n: "Ivory Coast",        f: '🇨🇮', conf: 'CAF' },
+  { n: 'Congo DR',           f: '🇨🇩', conf: 'CAF' },
   { n: 'Egypt',              f: '🇪🇬', conf: 'CAF' },
   { n: 'Ghana',              f: '🇬🇭', conf: 'CAF' },
   { n: 'Morocco',            f: '🇲🇦', conf: 'CAF' },

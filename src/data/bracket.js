@@ -11,18 +11,18 @@
 // Used to render the group stage selection UI.
 
 export const GROUPS = Object.freeze({
-  A: ['Mexico',        'South Africa', 'Korea Republic', 'Czechia'],
-  B: ['Canada',        'Qatar',        'Switzerland',    'Bosnia & Herzegovina'],
-  C: ['Brazil',        'Haiti',        'Scotland',       'Morocco'],
-  D: ['United States', 'Türkiye',      'Australia',      'Paraguay'],
-  E: ['Germany',       'Curaçao',      'Ivory Coast',    'Ecuador'],
-  F: ['Netherlands',   'Tunisia',      'Japan',          'Sweden'],
-  G: ['Belgium',       'Iran',         'New Zealand',    'Egypt'],
-  H: ['Spain',         'Saudi Arabia', 'Uruguay',        'Cabo Verde'],
-  I: ['France',        'Iraq',         'Norway',         'Senegal'],
-  J: ['Argentina',     'Jordan',       'Algeria',        'Austria'],
-  K: ['Portugal',      'Uzbekistan',   'Colombia',       'DR Congo'],
-  L: ['England',       'Panama',       'Croatia',        'Ghana'],
+  A: ['Mexico',         'South Africa',      'South Korea',        'Czechia'],
+  B: ['Canada',         'Qatar',             'Switzerland',        'Bosnia-Herzegovina'],
+  C: ['Brazil',         'Haiti',             'Scotland',           'Morocco'],
+  D: ['United States',  'Turkey',            'Australia',          'Paraguay'],
+  E: ['Germany',        'Curaçao',           'Ivory Coast',        'Ecuador'],
+  F: ['Netherlands',    'Tunisia',           'Japan',              'Sweden'],
+  G: ['Belgium',        'Iran',              'New Zealand',        'Egypt'],
+  H: ['Spain',          'Saudi Arabia',      'Uruguay',            'Cape Verde Islands'],
+  I: ['France',         'Iraq',              'Norway',             'Senegal'],
+  J: ['Argentina',      'Jordan',            'Algeria',            'Austria'],
+  K: ['Portugal',       'Uzbekistan',        'Colombia',           'Congo DR'],
+  L: ['England',        'Panama',            'Croatia',            'Ghana'],
 });
 
 export const GROUP_NAMES = Object.keys(GROUPS); // ['A','B',...,'L']
