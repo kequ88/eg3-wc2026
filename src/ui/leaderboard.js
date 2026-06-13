@@ -1,16 +1,29 @@
 // src/ui/leaderboard.js
 // Updated: Phase 1 identity (show own picks), flag display, round tabs
+// Performance: two-layer cache — in-memory (module) + sessionStorage (cross-render)
 
 import { findTeam }       from '../data/teams.js';
-import { loadAllPicks }   from '../services/firestore.js';
+import { loadAllPicksCached } from '../services/firestore.js';
 import { fetchMatchData, getSimData, SIM_MODE } from '../services/openfootball.js';
 import { calcTotalScore } from '../scoring/engine.js';
 import { Analytics }      from '../services/analytics.js';
 import { isPastDeadline } from './tabs.js';
 
+// ── CACHE ─────────────────────────────────────────────────────
+// In-memory cache survives tab switches within the same session.
+// Populated once, reused until TTL expires.
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
 let allPicks    = [];
 let matchResult = { mdata: {}, status: {}, roundSnaps: {} };
 let boardRound  = 'overall';
+
+let _cacheTime  = 0;          // epoch ms of last full fetch
+let _scoredCache = null;      // sorted+scored array, cleared when cache refreshes
+
+const isCacheWarm  = () => (Date.now() - _cacheTime) < CACHE_TTL_MS;
+const bustCache    = () => { _cacheTime = 0; _scoredCache = null; };
+export const refreshLeaderboard = bustCache; // call from admin after entering results
 
 // Phase 1 identity — read from localStorage
 const getMyHouse = () => localStorage.getItem('eg3_my_house') || null;
@@ -18,12 +31,28 @@ const getMyHouse = () => localStorage.getItem('eg3_my_house') || null;
 // ── RENDER ────────────────────────────────────────────────────
 export const renderLeaderboard = async () => {
   const el = document.getElementById('tab-board');
+
+  // Fast path: cache is warm, skip all network calls
+  if (isCacheWarm()) {
+    el.innerHTML = buildRoundTabs() + buildCards();
+    return;
+  }
+
   el.innerHTML = `<div class="empty">⏳ Loading picks &amp; scores…</div>`;
 
-  [allPicks, matchResult] = await Promise.all([
-    loadAllPicks(),
-    SIM_MODE ? Promise.resolve(getSimData()) : fetchMatchData(),
-  ]);
+  try {
+    [allPicks, matchResult] = await Promise.all([
+      loadAllPicksCached(),
+      SIM_MODE ? Promise.resolve(getSimData()) : fetchMatchDataCached(),
+    ]);
+  } catch (err) {
+    console.error('[Leaderboard] fetch error', err);
+    el.innerHTML = `<div class="empty">⚠️ Failed to load scores. Please try again.</div>`;
+    return;
+  }
+
+  _cacheTime   = Date.now();
+  _scoredCache = null; // force re-score with fresh data
 
   if (!allPicks.length) {
     el.innerHTML = `<div class="empty"><big>⚽</big><br><br>
@@ -32,6 +61,30 @@ export const renderLeaderboard = async () => {
   }
 
   el.innerHTML = buildRoundTabs() + buildCards();
+};
+
+// ── MATCH DATA CACHE (sessionStorage, 5-min TTL) ─────────────
+const MATCH_CACHE_KEY = 'eg3_match_cache';
+
+const fetchMatchDataCached = async () => {
+  try {
+    const raw = sessionStorage.getItem(MATCH_CACHE_KEY);
+    if (raw) {
+      const { data, ts } = JSON.parse(raw);
+      if ((Date.now() - ts) < CACHE_TTL_MS) {
+        console.log('[Leaderboard] match data from sessionStorage cache');
+        return data;
+      }
+    }
+  } catch (_) { /* corrupt cache — fall through */ }
+
+  const data = await fetchMatchData();
+
+  try {
+    sessionStorage.setItem(MATCH_CACHE_KEY, JSON.stringify({ data, ts: Date.now() }));
+  } catch (_) { /* sessionStorage full — skip caching */ }
+
+  return data;
 };
 
 // ── ROUND TABS ────────────────────────────────────────────────
@@ -55,15 +108,20 @@ const buildCards = () => {
   const started  = isPastDeadline();
   const myHouse  = getMyHouse();
 
-  const scored = allPicks
-    .filter(p => p.progress === 'done' || p.bracketPicks)
-    .map(p => ({
-      ...p,
-      score: started
-        ? calcTotalScore(p, matchResult.mdata, matchResult.status)
-        : 0,
-    }))
-    .sort((a, b) => b.score - a.score);
+  // Re-use scored array if already computed this cache window
+  if (!_scoredCache) {
+    _scoredCache = allPicks
+      .filter(p => p.progress === 'done' || p.bracketPicks)
+      .map(p => ({
+        ...p,
+        score: started
+          ? calcTotalScore(p, matchResult.mdata, matchResult.status)
+          : 0,
+      }))
+      .sort((a, b) => b.score - a.score);
+  }
+
+  const scored = _scoredCache;
 
   if (!scored.length) {
     return `<div class="empty">No completed submissions yet.</div>`;
@@ -111,44 +169,24 @@ const buildCards = () => {
 };
 
 // ── PICKS FLAGS ROW ───────────────────────────────────────────
-// Show exactly 4 flags: Champion → Runner-up → 3rd → 4th
-// Derived from Final (m104), 3rd place (m103), and SF picks (m101, m102)
 const buildPicksFlags = (p) => {
   const bp = p.bracketPicks;
   if (!bp) return '';
 
-  // Champion — user's Final winner pick
   const champion = bp.final?.['m104'] || null;
-
-  // Runner-up — the finalist who lost (in Final but not Champion)
-  // The two finalists come from SF winners: m101 winner and m102 winner
   const sf1 = bp.sf?.['m101'] || null;
   const sf2 = bp.sf?.['m102'] || null;
   const runnerUp = sf1 && sf2
     ? (sf1 === champion ? sf2 : sf1)
     : null;
-
-  // 3rd place — user's bronze match winner pick
   const third = bp.third?.['m103'] || null;
 
-  // 4th place — the bronze match loser
-  // Bronze participants are the two SF losers
-  // SF losers = whichever SF team was NOT picked as SF winner
-  // We need the SF participants — stored in r16 picks feeding into SF
-  // Simpler: from QF picks that fed into SF
-  // Actually simplest: third and fourth are both from SF losers
-  // fourth = the bronze participant who wasn't picked as 3rd
   const sfLosers = [];
   if (bp.sf) {
-    // We know sf1 and sf2 are the SF winners
-    // SF losers are the teams that played sf1/sf2 but lost
-    // These come from QF picks: m97 vs m98 → m101, m99 vs m100 → m102
     const qf1a = bp.qf?.['m97'] || null;
     const qf1b = bp.qf?.['m98'] || null;
     const qf2a = bp.qf?.['m99'] || null;
     const qf2b = bp.qf?.['m100'] || null;
-    // SF match 101 = winner of m97 vs winner of m98
-    // loser of m101 = whichever of qf1a/qf1b was NOT picked as sf1
     if (qf1a && qf1b && sf1) sfLosers.push(sf1 === qf1a ? qf1b : qf1a);
     if (qf2a && qf2b && sf2) sfLosers.push(sf2 === qf2a ? qf2b : qf2a);
   }
@@ -166,7 +204,6 @@ const buildPicksFlags = (p) => {
     .map(({ team, label, cls }) => {
       const t = findTeam(team);
       const flag = t?.f ?? '🏳';
-      // Show flag emoji + truncated name for cross-platform clarity
       const short = team.length > 8 ? team.slice(0, 7) + '…' : team;
       return `<span class="pick-flag-chip ${cls}" title="${label} ${team}">
         <span class="chip-flag">${flag}</span>
