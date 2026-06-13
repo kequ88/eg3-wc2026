@@ -6,6 +6,8 @@
 //
 // Data comes from openfootball via the leaderboard's cached result
 // so we don't make a duplicate network request.
+// If the leaderboard hasn't been opened yet, we fetch match data
+// ourselves using the same sessionStorage cache.
 //
 // Features:
 //   - Search filter across all 48 teams
@@ -15,17 +17,49 @@
 //   - Simulation mode banner when SIM_MODE is active
 
 import { TEAMS }    from '../data/teams.js';
-import { SIM_MODE } from '../services/openfootball.js';
+import { SIM_MODE, fetchMatchData, getSimData } from '../services/openfootball.js';
 import { getCachedMatchResult } from './leaderboard.js';
 import { Analytics } from '../services/analytics.js';
 
-// Confederation display order
 const CONF_ORDER = ['CONMEBOL', 'CONCACAF', 'UEFA', 'AFC', 'CAF', 'OFC'];
 
+// ── MATCH DATA CACHE (mirrors leaderboard's cache key) ────────
+const MATCH_CACHE_KEY = 'eg3_match_cache';
+const CACHE_TTL_MS    = 5 * 60 * 1000;
+
+const getMatchResult = async () => {
+  // Fast path: leaderboard already fetched and cached in memory
+  const cached = getCachedMatchResult();
+  if (cached && Object.keys(cached.mdata || {}).length > 0) return cached;
+
+  // Second path: sessionStorage has a warm copy
+  try {
+    const raw = sessionStorage.getItem(MATCH_CACHE_KEY);
+    if (raw) {
+      const { data, ts } = JSON.parse(raw);
+      if ((Date.now() - ts) < CACHE_TTL_MS) {
+        console.log('[TeamsPage] match data from sessionStorage cache');
+        return data;
+      }
+    }
+  } catch (_) {}
+
+  // Cold path: fetch fresh (also warms sessionStorage for leaderboard)
+  const data = SIM_MODE ? getSimData() : await fetchMatchData();
+  try {
+    sessionStorage.setItem(MATCH_CACHE_KEY, JSON.stringify({ data, ts: Date.now() }));
+  } catch (_) {}
+  return data;
+};
+
 // ── RENDER ────────────────────────────────────────────────────
-export const renderTeamsPage = () => {
+export const renderTeamsPage = async () => {
   const el = document.getElementById('tab-teams');
-  const { mdata, status } = getCachedMatchResult();
+
+  // Show skeleton while fetching (only visible on cold load)
+  el.innerHTML = `<div class="empty">⏳ Loading team data…</div>`;
+
+  const { mdata, status } = await getMatchResult();
 
   const simBanner = SIM_MODE
     ? `<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;
@@ -61,10 +95,9 @@ const buildTeamCard = (team, mdata, status) => {
   const s = status[team.n] || { reachedStage: 'Group Stage', eliminatedAt: null };
   const m = mdata[team.n]  || { groupWins: 0, groupDraws: 0, groupLosses: 0, koWins: 0 };
 
-  const isElim    = !!s.eliminatedAt;
-  const isChamp   = s.reachedStage === 'Winner';
+  const isElim  = !!s.eliminatedAt;
+  const isChamp = s.reachedStage === 'Winner';
 
-  // Stage label
   const stageLabel = isChamp
     ? '🏆 Champion'
     : isElim
@@ -73,7 +106,6 @@ const buildTeamCard = (team, mdata, status) => {
 
   const stageClass = isElim ? 'neg' : isChamp ? 'gold' : '';
 
-  // Match stats row — only show if there's data
   const hasStats = m.groupWins || m.groupDraws || m.groupLosses || m.koWins;
   const statsHtml = hasStats
     ? `<div class="team-stat-row">
@@ -97,26 +129,22 @@ const buildTeamCard = (team, mdata, status) => {
 };
 
 // ── SEARCH FILTER ─────────────────────────────────────────────
-// Called from App namespace via oninput on the search box.
 export const filterTeamsPage = () => {
   const input = document.getElementById('teams-search');
   if (!input) return;
 
   const q = input.value.toLowerCase().trim();
 
-  // Show/hide individual team cards
   document.querySelectorAll('.team-stat-card').forEach(card => {
     const match = card.dataset.name.toLowerCase().includes(q);
     card.style.display = match ? '' : 'none';
   });
 
-  // Hide entire confederation group if no teams visible within it
   document.querySelectorAll('.conf-group').forEach(group => {
     const anyVisible = [...group.querySelectorAll('.team-stat-card')]
       .some(c => c.style.display !== 'none');
     group.style.display = anyVisible ? '' : 'none';
   });
 
-  // Track searches longer than 2 chars (avoid noise from single keystrokes)
   if (q.length > 2) Analytics.teamsSearched(q);
 };
