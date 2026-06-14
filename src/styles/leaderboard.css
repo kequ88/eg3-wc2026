@@ -1,32 +1,57 @@
 /* src/styles/leaderboard.css */
 
-/* ── LEADERBOARD CARDS ── */
+/* ── LEADERBOARD CARDS (compact) ── */
 .board-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1rem 1.25rem;
-  margin-bottom: 10px;
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin-bottom: 4px;
   cursor: pointer;
   transition: border-color .15s;
 }
 .board-card:hover { border-color: var(--green); }
-.board-card.top   { border-left: 4px solid var(--gold); }
+.board-card.top   { border-left: 3px solid var(--gold); }
 
 .board-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
   gap: 8px;
 }
 
 .board-name {
   font-weight: 600;
-  font-size: 14px;
+  font-size: 12.5px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.board-name-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Avatar shrink for compact rows */
+.lb-avatar, .lb-avatar-placeholder {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+.lb-avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--green-light);
+  color: var(--green-dark);
+  font-weight: 700;
+  font-size: 11px;
 }
 
 .board-picks-preview {
@@ -53,10 +78,37 @@
 }
 
 .board-picks-hidden {
-  font-size: 12px;
+  font-size: 10px;
   color: var(--muted);
-  margin-top: 4px;
+  margin-top: 2px;
 }
+
+/* ── COMPACT FLAG CHIPS ── */
+.pick-flags-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 3px;
+  margin-top: 2px;
+  overflow: hidden;
+}
+
+.flag-chip {
+  font-size: 15px;
+  line-height: 1;
+  flex-shrink: 0;
+  font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+}
+
+.flag-chip.pick-qf { opacity: .55; }
+
+/* Score badges, compact */
+.pts, .pts-pending {
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.pts-pending { color: var(--muted); font-weight: 500; }
 
 /* ── PROFILE PAGE ── */
 .profile-card {
@@ -203,18 +255,17 @@
 
 /* ── MY CARD ── */
 .my-card {
-  border-left: 4px solid var(--green);
+  border-left: 3px solid var(--green);
   background: var(--green-light);
 }
 .my-card:hover { border-color: var(--green); }
 
 .you-badge {
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 600;
   color: var(--green-dark);
   background: var(--green-light);
-  padding: 1px 7px;
-  border-radius: 10px;
+  padding: 0px 5px;
+  border-radius: 8px;
   border: 1px solid var(--green);
-  margin-left: 4px;
 }

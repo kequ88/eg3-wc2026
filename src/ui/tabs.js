@@ -43,7 +43,7 @@ export const renderHeader = () => {
   const header = document.getElementById('app-header');
   header.innerHTML = `
     <h1>Elmina Green Three<br><span>World Cup 2026 Predictor</span> ⚽</h1>
-    <p>Pick your semis · finalists · winner — closest to reality wins the prize!</p>
+    <p>Last place eats ghost peppers. 🌶️</p>
   `;
 };
 
