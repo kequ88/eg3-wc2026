@@ -3,8 +3,12 @@
 /* ── NAV TABS ── */
 #app-tabs {
   display: flex;
-  background: transparent;
-  border-top: 1px solid rgba(255,255,255,.1);
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-top: 1px solid rgba(255,255,255,.15);
+  position: relative;
+  z-index: 1;
   overflow-x: auto;
   scrollbar-width: none;
 }

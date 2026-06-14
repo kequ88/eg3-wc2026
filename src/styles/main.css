@@ -49,42 +49,79 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── BANNER WRAPPER (header + tabs share one background image) ── */
+/* ── BANNER WRAPPER (solid purple background, fixed heights) ── */
+/* Height = header zone + tab row, so the emblem image spans both */
 #banner-wrap {
-  background-image: url('../assets/banner.webp');
-  background-size: cover;
-  background-position: left center;
-  background-repeat: no-repeat;
+  width: 100%;
+  background-color: #6100EB; /* purple sampled from banner artwork */
+  height: 115px;   /* mobile (20% taller than 96px) */
   position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  #banner-wrap { height: 130px; } /* tablet (20% taller than 108px) */
+}
+
+@media (min-width: 1024px) {
+  #banner-wrap { height: 144px; } /* desktop (20% taller than 120px) */
+}
+
+/* Decorative emblem — fixed image, anchored right, scales with banner height */
+#banner-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: auto;
+  aspect-ratio: 979 / 490;
+  background-image: url('../assets/banner-emblem.webp');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
 }
 
 /* ── HEADER ── */
 #app-header {
-  padding: 1.25rem 1rem;
+  padding: 0 1rem;
   text-align: left;
   position: relative;
-  min-height: 90px;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  flex: 1;
+  max-width: 60%; /* keep text clear of the right-anchored emblem */
 }
 
 #app-header h1 {
   font-family: var(--font-display);
-  font-size: clamp(20px, 5vw, 36px);
+  font-size: 16px;
   color: #fff;
-  letter-spacing: 2px;
-  line-height: 1.15;
+  letter-spacing: 1.5px;
+  line-height: 1.2;
   position: relative;
-  max-width: 38%;
 }
 
 #app-header p {
   color: rgba(255,255,255,.8);
-  font-size: 12px;
-  margin-top: 4px;
+  font-size: 10px;
+  margin-top: 2px;
   position: relative;
-  max-width: 38%;
+}
+
+@media (min-width: 768px) {
+  #app-header h1 { font-size: 20px; letter-spacing: 2px; }
+  #app-header p  { font-size: 12px; }
+}
+
+@media (min-width: 1024px) {
+  #app-header h1 { font-size: 24px; }
+  #app-header p  { font-size: 13px; }
 }
 
 /* ── DEADLINE BANNER ── */
