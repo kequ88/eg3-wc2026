@@ -18,7 +18,7 @@ import {
 } from './ui/tabs.js';
 
 import { renderRulesTab }                              from './ui/splash.js';
-import { renderLeaderboard, setBoardRound }            from './ui/leaderboard.js';
+import { renderLeaderboard }                           from './ui/leaderboard.js';
 import { renderProfile }                               from './ui/profile.js';
 import { renderTeamsPage, filterTeamsPage }            from './ui/teams-page.js';
 
@@ -69,9 +69,6 @@ window.App = {
     }
     switchTab(tabId);
   },
-
-  // ── LEADERBOARD ────────────────────────────────────────────
-  setBoardRound,
 
   // ── PROFILE ────────────────────────────────────────────────
   openProfile(houseId) {
