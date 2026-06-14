@@ -3,7 +3,7 @@
 /* ── NAV TABS ── */
 #app-tabs {
   display: flex;
-  background: var(--green-dark);
+  background: transparent;
   border-top: 1px solid rgba(255,255,255,.1);
   overflow-x: auto;
   scrollbar-width: none;

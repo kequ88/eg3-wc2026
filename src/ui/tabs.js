@@ -42,7 +42,7 @@ export const switchTab = (tabId) => {
 export const renderHeader = () => {
   const header = document.getElementById('app-header');
   header.innerHTML = `
-    <h1>Elmina Green Three<br><span>World Cup 2026 Predictor</span> ⚽</h1>
+    <h1>Elmina Green Three<br>FIFA World Cup 2026</h1>
     <p>Last place eats ghost peppers. 🌶️</p>
   `;
 };
@@ -50,13 +50,13 @@ export const renderHeader = () => {
 export const renderTabs = () => {
   const nav = document.getElementById('app-tabs');
   nav.innerHTML = `
-    <button class="tab active" data-tab="board"      onclick="App.switchTab('board')">🏅 Leaderboard</button>
-    <button class="tab"        data-tab="teams"      onclick="App.switchTab('teams')">🌍 Teams</button>
-    <button class="tab"        data-tab="rules"      onclick="App.switchTab('rules')">📋 Rules</button>
+    <button class="tab active" data-tab="board"      onclick="App.switchTab('board')">Leaderboard</button>
+    <button class="tab"        data-tab="teams"      onclick="App.switchTab('teams')">Teams</button>
+    <button class="tab"        data-tab="rules"      onclick="App.switchTab('rules')">Rules</button>
     <button class="tab"        data-tab="mybracket"  onclick="App.switchTab('mybracket')"
-      id="mybracket-tab" style="display:none">🌳 My Bracket</button>
+      id="mybracket-tab" style="display:none">My Bracket</button>
     <button class="tab"        data-tab="profile"    onclick="App.switchTab('profile')"
-      id="profile-tab" style="display:none">👤 Profile</button>
+      id="profile-tab" style="display:none">Profile</button>
   `;
 };
 
