@@ -304,3 +304,11 @@
   gap: 10px;
   margin-bottom: 10px;
 }
+
+/* ── RULES HERO ── */
+.rules-hero {
+  background: rgba(97, 0, 235, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 12px;
+}

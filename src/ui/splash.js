@@ -280,11 +280,10 @@ export const renderRulesTab = () => {
         </div>
       </div>
 
-      <button class="btn primary rules-cta" onclick="App.switchTab('pick')">
-        I Understand — Let Me Play! ⚽
+      <button class="btn primary rules-cta" onclick="App.switchTab('leaderboard')">
+        I Understand — Back to Leaderboard 🏆
       </button>
 
     </div>
   `;
 };
-
